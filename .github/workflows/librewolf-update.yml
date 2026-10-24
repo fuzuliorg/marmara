@@ -25,6 +25,7 @@ on:
       - config/**
       - l10n/**
       - modules/**
+      - panels/**
       - scripts/**
       - settings/**
       - startpage/**

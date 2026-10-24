@@ -24,6 +24,51 @@
   display: none !important;
 }
 
+/* Yan panelin genişliği sabit (GNOME Web gibi): yeniden boyutlandırma çubuğu yok */
+#sidebar-splitter {
+  display: none !important;
+}
+
+/* Panel pencerenin kenarına oturur: boşluk, çizgi ve gölge yok. Yalnızca siteye bakan
+ * (başlangıç) tarafın köşeleri yuvarlak; içerik de köşelerde kırpılır. Hem kutu hem
+ * içindeki tarayıcı aynı eğriyi taşır, böylece alt ve üst köşe aynı görünür. */
+/* Panel sayfanın üstüne biner (sayfayı daraltmaz): köşelerin dışında başka renkli bir
+ * alan kalmaz, eğrinin arkasında doğrudan site görünür. */
+#browser {
+  position: relative;
+}
+
+#sidebar-box {
+  position: absolute !important;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 10;
+  width: 360px !important;
+  min-width: 360px !important;
+  max-width: 360px !important;
+  margin: 0 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 16px 0 0 16px;
+  overflow: hidden;
+}
+
+#sidebar {
+  margin: 0;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 16px 0 0 16px !important;
+  overflow: hidden;
+}
+
+#sidebar-box:dir(rtl),
+#sidebar:dir(rtl) {
+  border-radius: 0 16px 16px 0 !important;
+}
+
 /* Açılırken kısa bir kayma + belirme animasyonu */
 @media (prefers-reduced-motion: no-preference) {
   #sidebar-box:not([hidden]) {
@@ -40,4 +85,16 @@
     opacity: 1;
     translate: 0 0;
   }
+}
+
+/* kapanış animasyonu (hide() sarmalayıcısı marmara-closing ekler) */
+@media (prefers-reduced-motion: no-preference) {
+  #sidebar-box[marmara-closing] {
+    animation: marmara-sidebar-out 170ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    pointer-events: none;
+  }
+}
+@keyframes marmara-sidebar-out {
+  from { opacity: 1; translate: 0 0; }
+  to { opacity: 0; translate: 28px 0; }
 }

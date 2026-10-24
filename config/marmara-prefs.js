@@ -88,6 +88,8 @@ lockPref("browser.toolbars.bookmarks.visibility", "never");
 lockPref("sidebar.verticalTabs", false);
 // Yan panel sağda açılır
 lockPref("sidebar.position_start", false);
+// Parolalar paneli (viewCPMSidebar) bu ayara bağlı olarak yan panellere eklenir
+lockPref("browser.contextual-password-manager.enabled", true);
 
 /** [SECTION] GEÇMİŞİ KAPANIRKEN TEMİZLEME
  * LibreWolf varsayılan olarak tarayıcı kapanırken çerezleri ve site verilerini

@@ -59,8 +59,9 @@ def main() -> int:
     for ext in ext_doc["extensions"]:
         settings[ext["id"]] = {
             "install_url": XPI_URL.format(slug=ext["slug"]),
-            # normal_installed: ilk açılışta kurulur, kullanıcı kapatabilir ama kaldıramaz
-            "installation_mode": "normal_installed",
+            # "allowed": politika kurmaz, kaldırılabilir bırakır. İlk kurulumu
+            # modules/MarmaraExtensions.sys.mjs bir kez yapar (install_url'den).
+            "installation_mode": "allowed",
             "private_browsing": True,
             # Düğmesi araç çubuğunda değil, eklentiler (yapboz) menüsünde dursun
             "default_area": "menupanel",

@@ -629,63 +629,226 @@ def add_category(browser: pathlib.Path, line: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Yan panel başlığı (Epiphany düzeni)
+# Yan paneller (Geçmiş, Yer imleri, Parolalar)
 # ---------------------------------------------------------------------------
 
-def patch_sidebar_header(browser: pathlib.Path) -> None:
-    """Yan panelin (Geçmiş, Yer imleri) başlığı: sağ üstte kapatma (X),
-    altında ortalanmış büyük başlık; Epiphany gibi."""
-    sidebar = browser / "chrome/browser/content/browser/sidebar"
-    mjs = need(sidebar / "sidebar-panel-header.mjs")
-    replace_once(mjs, '''  render() {
-    return html`
-      <link rel="stylesheet" href="chrome://browser/content/sidebar/sidebar-panel-header.css"></link>
-      <div class="sidebar-panel-heading">
-        <h4 class="sidebar-panel-title text-truncated-ellipsis">${this.heading}</h4>
-        <sidebar-panel-switcher view=${this.view}></sidebar-panel-switcher>
-        <moz-button
-          iconsrc="chrome://global/skin/icons/close.svg"
-          data-l10n-id="sidebar-panel-header-close-button"
-          @click=${this.closeSidebarPanel}
-          view=${this.view}
-          size="default"
-          type="icon ghost"
-        >
-        </moz-button>
-      </div>
-      <slot></slot>
-    `;
-  }''', '''  render() {
-    return html`
-      <link rel="stylesheet" href="chrome://browser/content/sidebar/sidebar-panel-header.css"></link>
-      <div class="sidebar-panel-heading">
-        <span></span>
-        <moz-button
-          iconsrc="chrome://global/skin/icons/close.svg"
-          data-l10n-id="sidebar-panel-header-close-button"
-          @click=${this.closeSidebarPanel}
-          view=${this.view}
-          size="default"
-          type="icon ghost"
-        >
-        </moz-button>
-      </div>
-      <h4 class="sidebar-panel-title text-truncated-ellipsis">${this.heading}</h4>
-      <sidebar-panel-switcher view=${this.view}></sidebar-panel-switcher>
-      <slot></slot>
-    `;
-  }''')
-    css = need(sidebar / "sidebar-panel-header.css")
-    css.write_text(css.read_text(encoding="utf-8") + '''
-/* Marmara: Epiphany düzeni. Başlık ortalanmış, büyük ve kalın. */
-.sidebar-panel-title {
-  margin-block: var(--space-small) var(--space-large);
-  text-align: center;
-  font-size: 1.5em;
-  font-weight: 700;
-}
-''', encoding="utf-8")
-    log("yan panel: Epiphany düzeni (kapat X, ortalanmış başlık)")
+PANELS_URL = "chrome://browser/content/marmara-panels/"
+
+
+def install_panels(browser: pathlib.Path, gre: pathlib.Path) -> None:
+    """Geçmiş, Yer imleri ve Parolalar yan panellerini Marmara'nın kendi
+    panelleriyle (panels/) değiştirir; üçü de aynı Adwaita tasarımını kullanır.
+    Parolalar about:logins sekmesi yerine yan panelde açılır."""
+    dst = need(browser / "chrome/browser/content/browser") / "marmara-panels"
+    shutil.rmtree(dst, ignore_errors=True)
+    shutil.copytree(ROOT / "panels", dst)
+
+    sidebar = need(browser / "chrome/browser/content/browser/sidebar/browser-sidebar.js")
+    replace_once(sidebar, '''          url: this.sidebarRevampEnabled
+            ? "chrome://browser/content/sidebar/sidebar-history.html"
+            : "chrome://browser/content/places/historySidebar.xhtml",''',
+                 f'          url: "{PANELS_URL}history.html",')
+    replace_once(sidebar, '''          url:
+            this.sidebarRevampEnabled && this.updatedBookmarksPanelEnabled
+              ? "chrome://browser/content/sidebar/sidebar-bookmarks.html"
+              : "chrome://browser/content/places/bookmarksSidebar.xhtml",''',
+                 f'          url: "{PANELS_URL}bookmarks.html",')
+    replace_once(sidebar, 'url: "chrome://global/content/megalist/megalist.html",',
+                 f'url: "{PANELS_URL}passwords.html",')
+
+    replace_once(
+        need(gre / "modules/LoginHelper.sys.mjs"),
+        '''  openPasswordManager(
+    window,
+    { filterString = "", entryPoint = "", loginGuid = null } = {}
+  ) {
+''',
+        '''  openPasswordManager(
+    window,
+    { filterString = "", entryPoint = "", loginGuid = null } = {}
+  ) {
+    // Marmara: parolalar about:logins sekmesi yerine yan panelde açılır
+    try {
+      const topWin = lazy.BrowserWindowTracker.getTopWindow({
+        allowFromInactiveWorkspace: true,
+      });
+      topWin.SidebarController.show("viewCPMSidebar");
+      return;
+    } catch (e) {
+      console.error("Marmara parolalar:", e);
+    }
+''',
+    )
+    # Kapanışta küçük bir kayma animasyonu: kutu hemen gizlenmesin diye hide()
+    # sarmalanır; animasyon bitince özgün hide çalışır.
+    replace_once(sidebar,
+        "  hide({ triggerNode, dismissPanel = this.sidebarRevampEnabled } = {}) {\n",
+        """  hide(opts = {}) {
+    const box = this._box;
+    if (
+      !this.isOpen ||
+      !box ||
+      box.hidden ||
+      this._marmaraCloseTimer ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return this._marmaraHideNow(opts);
+    }
+    box.setAttribute("marmara-closing", "");
+    this._marmaraCloseTimer = setTimeout(() => {
+      this._marmaraCloseTimer = null;
+      box.removeAttribute("marmara-closing");
+      this._marmaraHideNow(opts);
+    }, 170);
+  },
+
+  _marmaraCloseCancel() {
+    if (this._marmaraCloseTimer) {
+      clearTimeout(this._marmaraCloseTimer);
+      this._marmaraCloseTimer = null;
+      this._box?.removeAttribute("marmara-closing");
+    }
+  },
+
+  _marmaraHideNow({ triggerNode, dismissPanel = this.sidebarRevampEnabled } = {}) {
+""")
+    replace_once(sidebar,
+        "  async show(commandID, triggerNode) {\n",
+        "  async show(commandID, triggerNode) {\n    this._marmaraCloseCancel();\n")
+    # İndirilenler: Kitaplık penceresi yerine tarayıcı içinde kendi kutumuz
+    replace_once(
+        need(browser / "chrome/browser/content/browser/browser-commands.js"),
+        '''    } else {
+      PlacesCommandHook.showPlacesOrganizer("Downloads");
+    }''',
+        '''    } else {
+      try {
+        ChromeUtils.importESModule(
+          "resource:///modules/MarmaraSettings.sys.mjs"
+        ).MarmaraSettings.showDownloads(window);
+      } catch (e) {
+        console.error("Marmara indirilenler:", e);
+        PlacesCommandHook.showPlacesOrganizer("Downloads");
+      }
+    }''',
+    )
+    log("yan paneller: Geçmiş, Yer imleri, Parolalar (Adwaita), parolalar yan panelde")
+
+
+# Kullanıcının tıkladığı "uzantıları yönet" girişleri about:addons yerine Ayarlar > Uzantılar'a
+# gider. İzin istemleri gibi about:addons penceresine ihtiyaç duyan dahili akışlara dokunulmaz.
+ADDON_ENTRY_POINTS = [
+    ("chrome/browser/content/browser/browser-addons.js",
+     '''        .addEventListener("command", () => {
+          BrowserAddonUI.openAddonsMgr("addons://list/extension");''',
+     '''        .addEventListener("command", () => {
+          openPreferences("paneExtensions");'''),
+    ("chrome/browser/content/browser/browser-addons.js",
+     '          await BrowserAddonUI.openAddonsMgr("addons://list/extension");',
+     '          await openPreferences("paneExtensions");'),
+    ("chrome/browser/content/browser/browser-addons.js",
+     '''      linkToAboutAddonsEl.addEventListener("click", () => {
+        BrowserAddonUI.openAddonsMgr("addons://list/extension");''',
+     '''      linkToAboutAddonsEl.addEventListener("click", () => {
+        openPreferences("paneExtensions");'''),
+    ("chrome/browser/content/browser/browser-addons.js",
+     '      BrowserAddonUI.openAddonsMgr("addons://list/discover");',
+     '      openPreferences("paneExtensions");'),
+    ("chrome/browser/content/browser/browser-addons.js",
+     '    this.openAddonsMgr("addons://detail/" + encodeURIComponent(addon.id));',
+     '    openPreferences("paneExtensions");'),
+    ("chrome/browser/content/browser/browser-sets.js",
+     '''            BrowserAddonUI.openAddonsMgr();
+            if (event.sourceEvent?.target.id == "key_openAddons") {''',
+     '''            openPreferences("paneExtensions");
+            if (event.sourceEvent?.target.id == "key_openAddons") {'''),
+]
+
+
+def patch_addon_entry_points(browser: pathlib.Path) -> None:
+    for rel, old, new in ADDON_ENTRY_POINTS:
+        replace_once(need(browser / rel), old, new)
+    # "Eklenti eklendi" bildirimi uygulama menüsüne değil Ayarlar'a yönlendirsin
+    texts = {
+        "en-US": "Manage your add-ons and themes in Settings > Extensions.",
+        "tr": "Eklentilerinizi ve temalarınızı Ayarlar > Uzantılar'dan yönetebilirsiniz.",
+    }
+    for ftl in browser.glob("localization/*/browser/appMenuNotifications.ftl"):
+        text = texts.get(ftl.parent.parent.name)
+        if text is None:
+            continue
+        body = ftl.read_text(encoding="utf-8")
+        body = re.sub(r"(?m)^appmenu-addon-post-install-message3 = .*$",
+                      f"appmenu-addon-post-install-message3 = {text}", body)
+        ftl.write_text(body, encoding="utf-8")
+    log(f"uzantı girişleri: {len(ADDON_ENTRY_POINTS)} yer Ayarlar > Uzantılar'a yönlendirildi")
+
+
+def patch_migration_style(browser: pathlib.Path) -> None:
+    """İçe aktarma sihirbazını (kendi penceresinde açılır) Adwaita görünümüne getirir."""
+    skin = need(browser / "chrome/browser/skin/classic/browser/migration")
+    extra = (ROOT / "theme/browser/migration.css").read_text(encoding="utf-8")
+    wizard = need(skin / "migration-wizard.css")
+    wizard.write_text(wizard.read_text(encoding="utf-8") + extra, encoding="utf-8")
+    window = need(skin / "migration-dialog-window.css")
+    window.write_text(
+        window.read_text(encoding="utf-8")
+        + "\nhtml, body { margin: 0; overflow: hidden; }\nbody { padding: 28px 28px 24px; }\n"
+        + "html.marmara-embedded, html.marmara-embedded body { background: transparent; }\n"
+        + "html.marmara-embedded body { padding: 4px 24px 24px; }\n",
+        encoding="utf-8",
+    )
+    # Sihirbaz sayfası ayrı pencere yerine tarayıcı içindeki bir iframe'de de çalışsın
+    js = need(browser / "chrome/browser/content/browser/migration/migration-dialog-window.js")
+    replace_once(js, "    let args = window.arguments[0];\n",
+                 """    let args = window.arguments?.[0];
+    if (!args && window.frameElement) {
+      // Marmara: tarayıcı içindeki kutuda (iframe) açıldı
+      args = { options: window.frameElement.marmaraMigrationOptions ?? {} };
+      document.documentElement.classList.add("marmara-embedded");
+    }
+""")
+    replace_once(js, "window.close();", "MigrationDialog.closeWindow();", count_expected=3)
+    replace_once(js, "      window.sizeToContent();\n",
+                 """      if (window.top === window) {
+        window.sizeToContent();
+      } else {
+        const rect = document.body.getBoundingClientRect();
+        window.frameElement.style.height = Math.ceil(rect.height) + "px";
+      }
+""")
+    replace_once(js, "  _wiz: null,\n",
+                 """  _wiz: null,
+
+  closeWindow() {
+    if (window.top === window) {
+      window.close();
+    } else {
+      window.frameElement?.dispatchEvent(new CustomEvent("MarmaraMigrationClose"));
+    }
+  },
+""")
+    # Tüm giriş noktaları (Dosya menüsü, yer imleri, yeni sekme) kutuyu kullansın
+    replace_once(need(browser / "modules/MigrationUtils.sys.mjs"),
+                 "  showMigrationWizard(aOpener, aOptions) {\n",
+                 """  showMigrationWizard(aOpener, aOptions) {
+    // Marmara: tarayıcı penceresinde kendi kutusunda aç
+    if (
+      !aOptions?.isStartupMigration &&
+      aOpener?.document?.documentElement?.getAttribute("windowtype") ==
+        "navigator:browser"
+    ) {
+      try {
+        ChromeUtils.importESModule(
+          "resource:///modules/MarmaraSettings.sys.mjs"
+        ).MarmaraSettings.showMigration(aOpener, aOptions);
+        return Promise.resolve();
+      } catch (e) {
+        console.error("Marmara içe aktarma:", e);
+      }
+    }
+""")
+    log("içe aktarma sihirbazı: Adwaita görünümü")
 
 
 # Gizlilik ve güvenlik sayfasındaki metinler: (tr, en-US). None = o satır kaldırılır.
@@ -816,6 +979,7 @@ MODULES = [
     ("MarmaraWebGL.sys.mjs", "browser-window-delayed-startup", "MarmaraWebGL.initWindow"),
     ("MarmaraAppMenu.sys.mjs", "browser-window-delayed-startup", "MarmaraAppMenu.initWindow"),
     ("MarmaraWelcome.sys.mjs", "browser-window-delayed-startup", "MarmaraWelcome.initWindow"),
+    ("MarmaraExtensions.sys.mjs", "browser-window-delayed-startup", "MarmaraExtensions.initWindow"),
     ("MarmaraStartpage.sys.mjs", "browser-before-ui-startup", "MarmaraStartpage.init"),
 ]
 # Kategoriye bağlanmayan, kullanılırken içe aktarılan modüller
@@ -926,7 +1090,7 @@ def prune_locales(browser: pathlib.Path, gre: pathlib.Path) -> None:
             for d in (omni / "localization" / loc, omni / "chrome" / loc,
                       omni / "chrome/browser/locale" / loc):
                 if d.is_dir():
-                    shutil.rmtree(d)
+                    shutil.rmtree(d, ignore_errors=True)
                     removed_dirs += 1
 
     multilocale.write_text(",".join(l for l in available if l in keep) + "\n", encoding="utf-8")
@@ -961,7 +1125,9 @@ def main() -> int:
         ("tema seçimi", lambda: patch_theme_choice(args.browser, args.gre)),
         ("gömülü eklentiler", lambda: install_builtins(args.browser)),
         ("modüller", lambda: install_modules(args.browser)),
-        ("yan panel", lambda: patch_sidebar_header(args.browser)),
+        ("yan paneller", lambda: install_panels(args.browser, args.gre)),
+        ("uzantı girişleri", lambda: patch_addon_entry_points(args.browser)),
+        ("içe aktarma", lambda: patch_migration_style(args.browser)),
         ("diller", lambda: prune_locales(args.browser, args.gre)),
         ("araç çubuğu", lambda: patch_default_toolbar(args.gre)),
         ("arama", lambda: patch_default_search(args.browser)),

@@ -341,6 +341,53 @@ dialog.marmara-settings-dialog {
   }
 }
 
+/* Uzantı satırları */
+.marmara-settings-addon-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.marmara-settings-addon-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 8px;
+}
+
+.marmara-settings-addon-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.marmara-settings-round.flat {
+  width: 30px;
+  height: 30px;
+  background-color: transparent;
+
+  &:hover { background-color: var(--mm-set-hover); }
+  &:active { background-color: var(--mm-set-active); }
+  &:focus-visible { outline: 2px solid var(--focus-outline-color, AccentColor); outline-offset: -2px; }
+}
+
+.marmara-switch:disabled {
+  opacity: 0.45;
+}
+
+.marmara-settings-addon-search > .marmara-settings-input {
+  flex: 1 1 140px;
+  width: auto;
+  min-width: 0;
+  max-width: 260px;
+}
+
+.marmara-settings-addon-search > .marmara-settings-labels {
+  flex: 1 1 200px;
+}
+
 /* Yeniden başlatma uyarısı */
 .marmara-settings-notice {
   background-color: color-mix(in srgb, var(--mm-set-accent) 14%, transparent);
@@ -381,4 +428,148 @@ dialog.marmara-settings-dialog {
   }
 
   .marmara-settings-nav { white-space: nowrap; }
+}
+
+/* Küçük, yumuşak geçişler (hareketi azalt tercihine saygılı) */
+@media (prefers-reduced-motion: no-preference) {
+  .marmara-settings-nav,
+  .marmara-settings-round,
+  .marmara-settings-row.clickable,
+  .marmara-settings-select,
+  .marmara-settings-input,
+  .marmara-settings-segment,
+  .marmara-settings-pill {
+    transition: background-color 120ms ease, color 120ms ease, filter 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  .marmara-settings-page:not([hidden]) {
+    animation: marmara-settings-page-in 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .marmara-settings-group:not([hidden]),
+  .marmara-settings-empty:not([hidden]) {
+    animation: marmara-settings-fade-in 160ms ease-out;
+  }
+
+  .marmara-settings-switch,
+  .marmara-switch { transition: background-color 150ms ease; }
+}
+
+@keyframes marmara-settings-page-in {
+  from { opacity: 0; translate: 0 8px; }
+}
+
+@keyframes marmara-settings-fade-in {
+  from { opacity: 0; }
+}
+
+/* Ayarlar içi onay kutusu */
+dialog.marmara-settings-confirm {
+  box-sizing: border-box;
+  width: min(360px, calc(100% - 32px));
+  padding: 20px;
+  border: 1px solid var(--mm-border, color-mix(in srgb, currentColor 15%, transparent));
+  border-radius: 14px;
+  background-color: var(--mm-dialog-bg, Canvas);
+  color: var(--mm-window-fg, CanvasText);
+  font: menu;
+  box-shadow: 0 8px 32px rgb(0 0 6 / 0.35);
+
+  &::backdrop { background-color: rgb(0 0 6 / 0.4); }
+  &[open] { animation: marmara-settings-confirm-in 140ms ease-out; }
+}
+.marmara-settings-confirm-text { margin: 0 0 18px; line-height: 1.4; }
+.marmara-settings-confirm-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.marmara-settings-pill.destructive {
+  background-color: #c01c28;
+  color: #fff;
+}
+@keyframes marmara-settings-confirm-in {
+  from { opacity: 0; transform: scale(0.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.marmara-settings-confirm[open] { animation: none; }
+}
+
+/* İçe aktarma sihirbazı kutusu (iframe içinde sihirbaz sayfası) */
+dialog.marmara-migration-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--mm-border, color-mix(in srgb, currentColor 15%, transparent));
+  border-radius: 16px;
+  background-color: var(--mm-dialog-bg, Canvas);
+  color: var(--mm-window-fg, CanvasText);
+  font: menu;
+  box-shadow: 0 8px 32px rgb(0 0 6 / 0.35);
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+    animation: marmara-settings-in 160ms ease-out;
+  }
+  &::backdrop { background-color: rgb(0 0 6 / 0.45); }
+}
+.marmara-migration-head {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 10px 0;
+}
+.marmara-migration-frame {
+  display: block;
+  width: 100%;
+  height: 240px;
+  border: none;
+  background: transparent;
+  color-scheme: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.marmara-migration-dialog[open] { animation: none; }
+}
+
+/* İndirilenler kutusu (iframe içinde panels/downloads.html) */
+dialog.marmara-downloads-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: 620px;
+  height: 600px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--mm-border, color-mix(in srgb, currentColor 15%, transparent));
+  border-radius: 16px;
+  background-color: var(--mm-dialog-bg, Canvas);
+  color: var(--mm-window-fg, CanvasText);
+  box-shadow: 0 8px 32px rgb(0 0 6 / 0.35);
+
+  &[open] {
+    display: flex;
+    animation: marmara-settings-in 160ms ease-out;
+  }
+  &::backdrop { background-color: rgb(0 0 6 / 0.45); }
+}
+.marmara-downloads-frame {
+  display: block;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.marmara-downloads-dialog[open] { animation: none; }
 }

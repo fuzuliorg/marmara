@@ -55,6 +55,7 @@ class WelcomeDialog {
       { key: "language", build: () => this.#languageList() },
       { key: "theme", build: () => this.#themeList() },
       { key: "tosdr", build: () => this.#tosdrList() },
+      { key: "passwords", build: () => this.#passwordsList() },
       { key: "search", build: () => this.#searchList() },
     ];
   }
@@ -115,6 +116,16 @@ class WelcomeDialog {
     return this.#card(
       this.#choiceRow({ l10n: id("tosdr-off"), selected: !on, onPick: () => Services.prefs.setBoolPref(pref, false) }),
       this.#choiceRow({ l10n: id("tosdr-on"), selected: on, onPick: () => Services.prefs.setBoolPref(pref, true) })
+    );
+  }
+
+  /** Parolaları kaydetme: varsayılan kapalı; seçim signon.rememberSignons'a yazılır */
+  #passwordsList() {
+    const pref = "signon.rememberSignons";
+    const on = Services.prefs.getBoolPref(pref, false);
+    return this.#card(
+      this.#choiceRow({ l10n: id("passwords-off"), selected: !on, onPick: () => Services.prefs.setBoolPref(pref, false) }),
+      this.#choiceRow({ l10n: id("passwords-on"), selected: on, onPick: () => Services.prefs.setBoolPref(pref, true) })
     );
   }
 

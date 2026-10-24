@@ -1,0 +1,592 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Marmara yan panelleri (Geçmiş, Yer imleri, Parolalar): libadwaita görünümü.
+ * Üç panel aynı başlık, arama kutusu, liste satırı, iletişim kutusu ve bildirim
+ * parçalarını kullanır; yapıyı panels/panel-common.mjs kuruyor.
+ *
+ * Renkler chrome://global/skin/marmara/tokens.css içindeki --mm-* değişkenlerinden
+ * gelir (global.css onu yükler); değişken yoksa sistem renklerine düşer. */
+
+@import url("chrome://global/skin/global.css");
+
+:root {
+  --mm-p-hover: var(--mm-hover, color-mix(in srgb, currentColor 7%, transparent));
+  --mm-p-active: var(--mm-active, color-mix(in srgb, currentColor 16%, transparent));
+  --mm-p-button: var(--mm-button, color-mix(in srgb, currentColor 10%, transparent));
+  --mm-p-button-hover: var(--mm-button-hover, color-mix(in srgb, currentColor 15%, transparent));
+  --mm-p-line: var(--mm-border, color-mix(in srgb, currentColor 15%, transparent));
+  --mm-p-accent: var(--mm-accent-bg, AccentColor);
+  --mm-p-accent-fg: var(--mm-accent-fg, AccentColorText);
+  --mm-p-destructive: var(--mm-destructive, light-dark(#c01c28, #ff7b63));
+  --mm-p-destructive-bg: light-dark(#e01b24, #c01c28);
+  --mm-p-dim: color-mix(in srgb, currentColor 60%, transparent);
+
+  box-sizing: border-box;
+  height: 100%;
+  background-color: var(--mm-window-bg, Canvas);
+  color: var(--mm-window-fg, CanvasText);
+  color-scheme: light dark;
+  font: menu;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* ---- Simgeler ---- */
+
+.mm-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  -moz-context-properties: fill, stroke;
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.mm-favicon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 3px;
+  background: url("chrome://global/skin/icons/defaultFavicon.svg") center / contain no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--mm-p-dim);
+}
+
+/* ---- Düğmeler ---- */
+
+.mm-round {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+
+  &:hover { background-color: var(--mm-p-hover); }
+  &:active, &[aria-expanded="true"] { background-color: var(--mm-p-active); }
+  &:focus-visible { outline: 2px solid var(--mm-p-accent); outline-offset: -2px; }
+  &[disabled] { opacity: 0.4; }
+  &.destructive:hover { color: var(--mm-p-destructive); }
+}
+
+.mm-pill {
+  min-height: 34px;
+  margin: 0;
+  padding: 0 16px;
+  border: none;
+  border-radius: 9px;
+  background-color: var(--mm-p-button);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+
+  &:hover { background-color: var(--mm-p-button-hover); }
+  &:active { background-color: var(--mm-p-active); }
+  &:focus-visible { outline: 2px solid var(--mm-p-accent); outline-offset: 2px; }
+  &.suggested { background-color: var(--mm-p-accent); color: var(--mm-p-accent-fg); }
+  &.suggested:hover { background-color: color-mix(in srgb, var(--mm-p-accent) 88%, currentColor); }
+  &.destructive { background-color: var(--mm-p-destructive-bg); color: #fff; }
+  &.destructive:hover { background-color: color-mix(in srgb, var(--mm-p-destructive-bg) 88%, white); }
+  &.outline { background-color: transparent; box-shadow: inset 0 0 0 1px var(--mm-p-line); color: var(--mm-p-destructive); }
+  &.outline:hover { background-color: var(--mm-p-hover); }
+  &[disabled] { opacity: 0.45; }
+}
+
+/* ---- Başlık: kapat düğmesi ve ortalanmış başlık ---- */
+
+.mm-header {
+  display: grid;
+  grid-template-columns: 30px 1fr 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 4px;
+
+  > h1 {
+    margin: 0;
+    font-size: 1.15em;
+    font-weight: 700;
+    text-align: center;
+  }
+}
+
+.mm-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px 8px;
+}
+
+.mm-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+
+  > .mm-icon {
+    position: absolute;
+    inset-inline-start: 10px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  > input {
+    width: 100%;
+    min-height: 34px;
+    margin: 0;
+    padding-block: 0;
+    padding-inline: 32px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background-color: var(--mm-p-button);
+    color: inherit;
+    font: inherit;
+
+    &::placeholder { color: var(--mm-p-dim); opacity: 1; }
+    &:focus-visible { outline: 2px solid var(--mm-p-accent); outline-offset: -1px; }
+  }
+}
+
+/* ---- Açılır menü (popover) ---- */
+
+.mm-menu {
+  position: fixed;
+  margin: 0;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--mm-p-line);
+  border-radius: 12px;
+  background-color: var(--mm-popover-bg, Canvas);
+  color: inherit;
+  box-shadow: 0 4px 16px rgb(0 0 6 / 0.25);
+
+  > button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 34px;
+    margin: 0;
+    padding: 0 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+
+    &:hover, &:focus-visible { background-color: var(--mm-p-hover); outline: none; }
+    &:active { background-color: var(--mm-p-active); }
+    &.destructive { color: var(--mm-p-destructive); }
+  }
+
+  > hr {
+    margin: 6px 0;
+    border: none;
+    border-top: 1px solid var(--mm-p-line);
+  }
+}
+
+/* ---- Liste ---- */
+
+.mm-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 6px 10px;
+  scrollbar-width: thin;
+}
+
+.mm-group {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 10px 10px 4px;
+  background-color: var(--mm-window-bg, Canvas);
+  color: var(--mm-p-dim);
+  font-size: 0.85em;
+  font-weight: 700;
+}
+
+.mm-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+
+  &:hover { background-color: var(--mm-p-hover); }
+  &:focus-within { background-color: var(--mm-p-hover); }
+
+  > .mm-main {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 10px;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+
+    &:active { background-color: var(--mm-p-active); }
+    &:focus-visible { outline: 2px solid var(--mm-p-accent); outline-offset: -2px; }
+  }
+
+  /* Satır işlemleri yalnızca üzerine gelince ya da odaklanınca görünür */
+  > .mm-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-inline-end: 4px;
+    opacity: 0;
+  }
+
+  &:hover > .mm-actions,
+  &:focus-within > .mm-actions { opacity: 1; }
+}
+
+.mm-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+
+  > .mm-title,
+  > .mm-sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > .mm-sub {
+    color: var(--mm-p-dim);
+    font-size: 0.85em;
+  }
+}
+
+.mm-time {
+  color: var(--mm-p-dim);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mm-row:hover .mm-time,
+.mm-row:focus-within .mm-time { display: none; }
+
+.mm-more {
+  display: block;
+  margin: 8px auto;
+}
+
+/* Klasör (yer imleri) */
+.mm-folder-head {
+  font-weight: 700;
+
+  > .mm-chevron {
+    transition: rotate 150ms ease;
+    rotate: -90deg;
+  }
+
+  &[aria-expanded="true"] > .mm-chevron { rotate: 0deg; }
+}
+
+[dir="rtl"] .mm-folder-head > .mm-chevron { rotate: 90deg; }
+[dir="rtl"] .mm-folder-head[aria-expanded="true"] > .mm-chevron { rotate: 0deg; }
+
+.mm-children {
+  margin-inline-start: 14px;
+  padding-inline-start: 4px;
+  border-inline-start: 1px solid var(--mm-p-line);
+}
+
+.mm-count {
+  color: var(--mm-p-dim);
+  font-size: 0.85em;
+  font-weight: 400;
+}
+
+/* ---- Boş durum ---- */
+
+.mm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px 24px;
+  color: var(--mm-p-dim);
+  text-align: center;
+
+  > .mm-icon {
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+  }
+
+  > .mm-title { color: var(--mm-window-fg, CanvasText); font-size: 1.15em; font-weight: 700; }
+}
+
+/* ---- İletişim kutusu (AdwAlertDialog) ---- */
+
+dialog.mm-dialog {
+  width: min(340px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  margin: auto;
+  padding: 22px 20px 20px;
+  overflow-y: auto;
+  border: 1px solid var(--mm-p-line);
+  border-radius: 14px;
+  background-color: var(--mm-dialog-bg, Canvas);
+  color: inherit;
+  box-shadow: 0 8px 32px rgb(0 0 6 / 0.35);
+
+  &::backdrop { background-color: rgb(0 0 6 / 0.45); }
+
+  &[open] { animation: mm-dialog-in 140ms ease-out; }
+
+  > h2 {
+    margin: 0 0 8px;
+    font-size: 1.2em;
+    text-align: center;
+  }
+
+  > p {
+    margin: 0 0 18px;
+    color: var(--mm-p-dim);
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  > .mm-warning {
+    display: flex;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: color-mix(in srgb, var(--mm-p-destructive) 14%, transparent);
+    color: var(--mm-window-fg, CanvasText);
+    line-height: 1.35;
+    text-align: start;
+
+    > .mm-icon { margin-top: 2px; color: var(--mm-p-destructive); }
+  }
+}
+
+@keyframes mm-dialog-in {
+  from { opacity: 0; transform: scale(0.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.mm-dialog[open] { animation: none; }
+}
+
+.mm-buttons {
+  display: flex;
+  gap: 8px;
+
+  > .mm-pill { flex: 1; }
+}
+
+.mm-dialog-close {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+}
+
+/* Form alanları */
+.mm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.mm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  > label,
+  > .mm-label {
+    color: var(--mm-p-dim);
+    font-size: 0.85em;
+    font-weight: 700;
+  }
+}
+
+.mm-entry {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background-color: var(--mm-p-button);
+
+  &:focus-within { outline: 2px solid var(--mm-p-accent); outline-offset: -1px; }
+  &[aria-invalid="true"] { outline: 2px solid var(--mm-p-destructive); outline-offset: -1px; }
+
+  > input,
+  > .mm-value {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0 10px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+  }
+
+  > .mm-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: text;
+  }
+
+  > .mm-round { width: 28px; height: 28px; margin-inline-end: 3px; }
+}
+
+.mm-error,
+dialog.mm-dialog > p.mm-error {
+  margin: 0 0 12px;
+  color: var(--mm-p-destructive);
+  font-size: 0.9em;
+  text-align: center;
+}
+
+/* ---- Bildirim (AdwToast) ---- */
+
+.mm-toast {
+  position: fixed;
+  inset-inline: 12px;
+  bottom: 14px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin-inline: auto;
+  padding: 6px 8px 6px 16px;
+  border-radius: 99px;
+  background-color: rgb(0 0 6 / 0.85);
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 6 / 0.35);
+  animation: mm-toast-in 160ms ease-out;
+
+  > button {
+    margin: 0;
+    padding: 4px 12px;
+    border: none;
+    border-radius: 99px;
+    background: transparent;
+    color: #99c1f1;
+    font: inherit;
+    font-weight: 700;
+
+    &:hover { background-color: rgb(255 255 255 / 0.1); }
+  }
+}
+
+@keyframes mm-toast-in {
+  from { opacity: 0; translate: 0 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-toast { animation: none; }
+}
+
+/* Küçük geçişler */
+@media (prefers-reduced-motion: no-preference) {
+  .mm-row, .mm-round, .mm-pill, .mm-menu button {
+    transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease;
+  }
+  .mm-row { animation: mm-row-in 160ms ease-out; }
+  .mm-actions { transition: opacity 120ms ease; }
+}
+@keyframes mm-row-in {
+  from { opacity: 0; translate: 0 4px; }
+}
+
+/* ---- İndirilenler ---- */
+
+.mm-fileicon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.mm-main:disabled {
+  color: inherit;
+  cursor: default;
+}
+
+.mm-text > .mm-sub.warn { color: var(--mm-p-destructive); }
+
+.mm-progress {
+  display: block;
+  height: 4px;
+  margin-block-start: 6px;
+  border-radius: 2px;
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
+  overflow: hidden;
+}
+.mm-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background-color: var(--mm-p-accent);
+  transition: width 250ms ease;
+}
+.mm-progress.indeterminate .mm-progress-fill {
+  width: 35%;
+  animation: mm-indeterminate 1.1s ease-in-out infinite alternate;
+}
+@keyframes mm-indeterminate {
+  from { translate: 0; }
+  to { translate: 185%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-progress.indeterminate .mm-progress-fill { animation: none; width: 100%; opacity: 0.5; }
+  .mm-progress-fill { transition: none; }
+}
+
+/* İşlemleri hep görünsün: iniyorsa iptal düğmesi gizli kalmasın */
+.mm-row.active > .mm-actions { opacity: 1; }
+
+/* Tarayıcı içindeki kutuda arka plan kutunun kendisinden gelir */
+.mm-embedded,
+.mm-embedded body { background-color: transparent; }
+.mm-embedded .mm-group { background-color: var(--mm-dialog-bg, Canvas); }

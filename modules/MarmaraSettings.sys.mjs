@@ -29,6 +29,7 @@ const ICON = name =>
     passwords: "chrome://browser/skin/login.svg",
     downloads: "chrome://browser/skin/downloads/downloads.svg",
     data: "chrome://browser/skin/save.svg",
+    extensions: "chrome://mozapps/skin/extensions/extension.svg",
   })[name] ?? `chrome://global/skin/icons/${name}.svg`;
 
 const PREF_DARK = "ui.systemUsesDarkTheme";
@@ -41,6 +42,9 @@ const PREF_LOCALE = "intl.locale.requested";
 const GITHUB_PROJECT = "fuzuliinitiative/marmara";
 const UPDATE_TIMEOUT_MS = 10000;
 const FLATPAK_ID = "io.github.fuzuliinitiative.Marmara";
+const ADDON_FALLBACK_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+const ADDON_SEARCH_URL = "https://addons.mozilla.org/";
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
 // Arayüz dilleri (Marmara yalnızca bunları taşır). Değer: intl.locale.requested.
 const LANGUAGES = [
@@ -455,6 +459,8 @@ function restartBrowser() {
 //   segments { k, bind, options }              yan yana seçenek düğmeleri
 //   engine   { k }                             arama motoru seçicisi (özel)
 //   button   { k, run(win), icon, sub?, show?(win) }
+//   addons   { kind: "extension" | "plugin", emptyKey? }   kurulu uzantı / yan uygulama listesi
+//   addon-search { k }                         addons.mozilla.org'da arama (kullanıcı başlatınca)
 // Metinler: marmara-settings-<k>, açıklama için marmara-settings-<k>-sub
 // ---------------------------------------------------------------------------
 
@@ -628,8 +634,12 @@ const PAGES = [
           {
             type: "button",
             k: "saved-logins",
-            icon: "open-in-new",
-            run: win => win.openTrustedLinkIn("about:logins", "tab"),
+            icon: "arrow-right",
+            run: (win, row) => {
+              // Parolalar yan panelde açılır; arkada kalmasın diye ayarlar kapanır
+              row.closest("dialog")?.close();
+              win.SidebarController.show("viewCPMSidebar");
+            },
           },
         ],
       },
@@ -658,6 +668,22 @@ const PAGES = [
     ],
   },
   {
+    id: "extensions",
+    icon: "extensions",
+    groups: [
+      { k: "extensions", rows: [{ type: "addons", kind: "extension", emptyKey: "addons-empty" }] },
+      // Yan uygulamalar (Firefox'un "eklentiler"i: OpenH264, Widevine gibi); yoksa grup gizlenir
+      {
+        k: "plugins",
+        show: (_win, dialog) => dialog.addonCounts.plugin > 0,
+        rows: [{ type: "addons", kind: "plugin" }],
+      },
+      // Temalar: en üstte varsayılan tema, ardından kullanıcının kurduklarıyla
+      { k: "themes", rows: [{ type: "addons", kind: "theme" }] },
+      { k: "find-extensions", rows: [{ type: "addon-search", k: "addon-search", sub: true }] },
+    ],
+  },
+  {
     id: "data",
     icon: "data",
     groups: [
@@ -668,10 +694,13 @@ const PAGES = [
             type: "button",
             k: "import",
             icon: "arrow-right",
-            run: win => {
+            run: (win, row) => {
               const { MigrationUtils } = ChromeUtils.importESModule(
                 "resource:///modules/MigrationUtils.sys.mjs"
               );
+              // Ayarlar kapanır; sihirbaz about:preferences yerine kendi
+              // penceresinde açılır (opener verilmezse bağımsız pencere kullanılır)
+              row.closest("dialog")?.close();
               MigrationUtils.showMigrationWizard(win, {
                 entrypoint: MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU,
               });
@@ -679,17 +708,6 @@ const PAGES = [
           },
           { type: "button", k: "export-bookmarks", icon: "arrow-right", run: exportBookmarks },
           { type: "button", k: "export-history", icon: "arrow-right", run: exportHistory },
-        ],
-      },
-      {
-        k: "extensions",
-        rows: [
-          {
-            type: "button",
-            k: "addons",
-            icon: "open-in-new",
-            run: win => win.openTrustedLinkIn("about:addons", "tab"),
-          },
         ],
       },
     ],
@@ -703,6 +721,7 @@ const PANE_ALIASES = [
   [/passwords|autofill|logins/i, "passwords"],
   [/download|applications/i, "downloads"],
   [/sync|import|backup/i, "data"],
+  [/extensions|addons|plugins/i, "extensions"],
 ];
 
 // ---------------------------------------------------------------------------
@@ -738,6 +757,8 @@ class SettingsDialog {
     this.doc = win.document;
     this.pages = new Map(); // sayfa kimliği -> { button, section }
     this.rules = [];
+    this.addonCounts = {}; // tür -> kurulu sayısı (grup görünürlüğü için)
+    this.cleanups = []; // pencere kapanınca çalışır
   }
 
   icon(name, className = "marmara-settings-icon") {
@@ -1026,6 +1047,207 @@ class SettingsDialog {
     return row;
   }
 
+  /** addons.mozilla.org'da arama: yalnızca kullanıcı aramayı başlatınca bir sekme açar */
+  #addonSearchRow(spec) {
+    const input = create(this.doc, "input", {
+      className: "marmara-settings-input",
+      attrs: {
+        type: "search",
+        autocomplete: "off",
+        spellcheck: "false",
+        "data-l10n-id": id("addon-search-placeholder"),
+        "data-l10n-attrs": "placeholder, aria-label",
+      },
+    });
+    const button = create(this.doc, "button", {
+      className: "marmara-settings-pill suggested",
+      l10n: id("addon-search-button"),
+      attrs: { type: "button" },
+    });
+    const go = () => {
+      const query = input.value.trim();
+      const base = `${ADDON_SEARCH_URL}${Services.locale.appLocaleAsBCP47}/firefox/`;
+      this.win.openTrustedLinkIn(query ? `${base}search/?q=${encodeURIComponent(query)}` : base, "tab");
+      this.close();
+    };
+    button.addEventListener("click", go);
+    input.addEventListener("keydown", event => {
+      if (event.key == "Enter") {
+        go();
+      }
+    });
+    const row = this.#row(spec, input, button);
+    row.classList.add("marmara-settings-addon-search");
+    return row;
+  }
+
+  /** Sistem iletişim kutusu yerine ayarların kendi temasında onay kutusu */
+  #confirm(message) {
+    return new Promise(resolve => {
+      const text = create(this.doc, "p", { className: "marmara-settings-confirm-text", text: message });
+      const cancel = create(this.doc, "button", {
+        className: "marmara-settings-pill", l10n: id("confirm-cancel"), attrs: { type: "button" } });
+      const ok = create(this.doc, "button", {
+        className: "marmara-settings-pill suggested destructive", l10n: id("confirm-remove"), attrs: { type: "button" } });
+      const box = create(this.doc, "dialog", { className: "marmara-settings-confirm" },
+        text, create(this.doc, "div", { className: "marmara-settings-confirm-buttons" }, cancel, ok));
+      let result = false;
+      cancel.addEventListener("click", () => box.close());
+      ok.addEventListener("click", () => {
+        result = true;
+        box.close();
+      });
+      box.addEventListener("close", () => {
+        box.remove();
+        resolve(result);
+      });
+      // Esc yalnızca bu kutuyu kapatsın, ayarları değil
+      box.addEventListener("keydown", event => event.stopPropagation());
+      this.dialog.append(box);
+      this.doc.l10n.translateFragment(box);
+      box.showModal();
+      cancel.focus();
+    });
+  }
+
+  /** Kurulu uzantılar / yan uygulamalar; AddonManager değişince kendini yeniler */
+  #addonList(card, spec) {
+    const { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
+    let latest = 0;
+    const render = async () => {
+      const mine = ++latest;
+      const addons = (await AddonManager.getAddonsByTypes([spec.kind]))
+        // Temalarda yalnızca varsayılan tema ve kullanıcının kurdukları listelenir
+        .filter(addon => !addon.hidden && (spec.kind != "theme" || addon.id == DEFAULT_THEME_ID || !addon.isBuiltin))
+        .sort((a, b) =>
+          (b.id == DEFAULT_THEME_ID) - (a.id == DEFAULT_THEME_ID) || a.name.localeCompare(b.name));
+      if (mine != latest || !this.dialog?.isConnected) {
+        return;
+      }
+      const rows = addons.map(addon => this.#addonRow(addon, AddonManager));
+      if (!rows.length && spec.emptyKey) {
+        rows.push(
+          create(this.doc, "div", { className: "marmara-settings-row" },
+            create(this.doc, "span", { className: "marmara-settings-sub", l10n: id(spec.emptyKey) }))
+        );
+      }
+      card.replaceChildren(...rows);
+      this.addonCounts[spec.kind] = addons.length;
+      this.doc.l10n.translateFragment(card);
+      this.#applyRules();
+      if (this.search.value) {
+        this.#filter(this.search.value);
+      }
+    };
+    let timer = 0;
+    const schedule = () => {
+      this.win.clearTimeout(timer);
+      timer = this.win.setTimeout(render, 150);
+    };
+    const listener = {
+      onEnabled: schedule,
+      onDisabled: schedule,
+      onInstalled: schedule,
+      onUninstalled: schedule,
+    };
+    AddonManager.addAddonListener(listener);
+    this.cleanups.push(() => {
+      this.win.clearTimeout(timer);
+      AddonManager.removeAddonListener(listener);
+    });
+    // Sayfa kurulurken henüz pencerede değiliz; açılınca ilk çizim
+    this.win.setTimeout(render, 0);
+  }
+
+  #addonRow(addon, AddonManager) {
+    const canDisable = !!(addon.permissions & AddonManager.PERM_CAN_DISABLE);
+    const canRemove = !!(addon.permissions & AddonManager.PERM_CAN_UNINSTALL);
+
+    const labels = create(this.doc, "div", { className: "marmara-settings-labels" },
+      create(this.doc, "span", { className: "marmara-settings-title", text: addon.name }),
+      create(this.doc, "span", {
+        className: "marmara-settings-sub",
+        l10n: id("addon-version"),
+        attrs: { "data-l10n-args": JSON.stringify({ version: addon.version }) },
+      }));
+    if (addon.description) {
+      labels.title = addon.description;
+    }
+    const iconUrl = addon.iconURL || addon.icons?.[32] || ADDON_FALLBACK_ICON;
+    const head = create(this.doc, "div", { className: "marmara-settings-addon-head" },
+      create(this.doc, "img", { className: "marmara-settings-addon-icon", attrs: { src: iconUrl, alt: "" } }),
+      labels);
+
+    const actions = create(this.doc, "div", { className: "marmara-settings-addon-actions" });
+    const iconButton = (name, l10n, onClick) => {
+      const button = create(this.doc, "button", {
+        className: "marmara-settings-round flat",
+        l10n,
+        attrs: { type: "button", "data-l10n-attrs": "title, aria-label" },
+      }, this.icon(name));
+      button.addEventListener("click", onClick);
+      return button;
+    };
+    if (addon.optionsURL && addon.isActive) {
+      actions.append(
+        iconButton("settings", id("addon-options"), () => {
+          this.win.openTrustedLinkIn(addon.optionsURL, "tab");
+          this.close();
+        })
+      );
+    }
+    if (canRemove) {
+      actions.append(
+        iconButton("delete", id("addon-remove"), async () => {
+          const message = await this.doc.l10n.formatValue(
+            id(addon.type == "theme" ? "addon-remove-theme-confirm" : "addon-remove-confirm"),
+            { name: addon.name }
+          );
+          if (await this.#confirm(message)) {
+            await addon.uninstall();
+          }
+        })
+      );
+    }
+    if (addon.type == "theme") {
+      // Tema: anahtar yerine "Kullan" düğmesi; etkin olan işaretlenir
+      const use = create(this.doc, "button", {
+        className: "marmara-settings-pill" + (addon.isActive ? "" : " suggested"),
+        l10n: id(addon.isActive ? "addon-theme-active" : "addon-theme-use"),
+        attrs: { type: "button" },
+      });
+      use.disabled = addon.isActive;
+      use.addEventListener("click", async () => {
+        use.disabled = true;
+        try {
+          await addon.enable();
+        } catch (e) {
+          console.error("Marmara ayarlar (tema):", e);
+        }
+      });
+      actions.append(use);
+      return create(this.doc, "div", { className: "marmara-settings-row" }, head, actions);
+    }
+    const toggle = create(this.doc, "button", {
+      className: "marmara-switch",
+      attrs: { type: "button", role: "switch", "aria-checked": String(addon.isActive), "aria-label": addon.name },
+    }, create(this.doc, "span", { className: "marmara-switch-knob" }));
+    toggle.disabled = !canDisable;
+    toggle.addEventListener("click", async () => {
+      toggle.disabled = true;
+      try {
+        await (addon.isActive ? addon.disable() : addon.enable());
+      } catch (e) {
+        console.error("Marmara ayarlar (eklenti):", e);
+      }
+      toggle.setAttribute("aria-checked", String(addon.isActive));
+      toggle.disabled = !canDisable;
+    });
+    actions.append(toggle);
+
+    return create(this.doc, "div", { className: "marmara-settings-row" }, head, actions);
+  }
+
   #rows(spec) {
     switch (spec.type) {
       case "switch":
@@ -1042,6 +1264,8 @@ class SettingsDialog {
         return [this.#buttonRow(spec)];
       case "update":
         return [this.#updateRow(spec)];
+      case "addon-search":
+        return [this.#addonSearchRow(spec)];
       default:
         return [];
     }
@@ -1050,7 +1274,11 @@ class SettingsDialog {
   #group(spec) {
     const card = create(this.doc, "div", { className: "marmara-settings-card" });
     for (const row of spec.rows) {
-      card.append(...this.#rows(row));
+      if (row.type == "addons") {
+        this.#addonList(card, row);
+      } else {
+        card.append(...this.#rows(row));
+      }
     }
     const group = create(
       this.doc,
@@ -1062,7 +1290,7 @@ class SettingsDialog {
     if (spec.show) {
       // Koşullu grup: ayar değişince yeniden değerlendirilir (örn. varsayılan yapıldıktan sonra gizlenir)
       this.rules.push(() => {
-        group.dataset.hiddenByRule = spec.show(this.win) ? "0" : "1";
+        group.dataset.hiddenByRule = spec.show(this.win, this) ? "0" : "1";
         group.hidden = group.dataset.hiddenByRule == "1" || this.dialog.classList.contains("searching");
       });
     }
@@ -1196,7 +1424,12 @@ class SettingsDialog {
         this.close();
       }
     });
-    this.dialog.addEventListener("close", () => this.dialog.remove());
+    this.dialog.addEventListener("close", () => {
+      for (const cleanup of this.cleanups) {
+        cleanup();
+      }
+      this.dialog.remove();
+    });
 
     this.#applyRules();
     doc.documentElement.append(this.dialog);
@@ -1204,6 +1437,72 @@ class SettingsDialog {
     this.showPage(PAGES.some(p => p.id == startPage) ? startPage : PAGES[0].id);
     this.dialog.showModal();
   }
+}
+
+const MIGRATION_URL = "chrome://browser/content/migration/migration-dialog-window.html";
+
+/**
+ * İçe aktarma sihirbazı: ayrı bir sistem penceresi yerine tarayıcı penceresinin
+ * içinde, Ayarlar gibi yuvarlak köşeli bir kutuda açılır. Sihirbazın kendi sayfası
+ * (migration-dialog-window.html) bir iframe içinde yüklenir; sayfanın iframe'de
+ * çalışması için omni.ja'da yamalanır (scripts/patch_omni.py).
+ */
+function showMigrationDialog(win, options = {}) {
+  const doc = win.document;
+  if (doc.querySelector("dialog.marmara-migration-dialog")) {
+    return;
+  }
+  const frame = create(doc, "iframe", { className: "marmara-migration-frame", attrs: { title: "" } });
+  frame.addEventListener("MarmaraMigrationClose", () => dialog.close());
+  const close = create(doc, "button", {
+    className: "marmara-settings-round",
+    l10n: id("close"),
+    attrs: { type: "button", "data-l10n-attrs": "title, aria-label" },
+  }, create(doc, "img", { className: "marmara-settings-icon", attrs: { src: ICON("close"), alt: "" } }));
+  close.addEventListener("click", () => dialog.close());
+  const dialog = create(doc, "dialog", { className: "marmara-migration-dialog" },
+    create(doc, "div", { className: "marmara-migration-head" }, close), frame);
+  dialog.addEventListener("close", () => dialog.remove());
+  win.MozXULElement.insertFTLIfNeeded("browser/marmara.ftl");
+  // Sayfa alanının (araç çubuklarının altı) ortasına yerleş
+  try {
+    const rect = win.gBrowser.selectedBrowser.getBoundingClientRect();
+    dialog.style.insetBlock = `${Math.round(rect.top)}px ${Math.max(0, Math.round(win.innerHeight - rect.bottom))}px`;
+  } catch (e) {
+    // ölçülemezse pencerenin ortası
+  }
+  doc.documentElement.append(dialog);
+  doc.l10n.translateFragment(dialog);
+  // Sayfa kendi seçeneklerini window.arguments'tan okur; iframe'de bu yok,
+  // bu yüzden yamalı sayfa seçenekleri üst pencereden alır.
+  frame.marmaraMigrationOptions = options;
+  frame.src = MIGRATION_URL;
+  dialog.showModal();
+}
+
+/** İndirilenler: tarayıcı içinde, Ayarlar gibi yuvarlak köşeli kutuda */
+function showDownloadsDialog(win) {
+  const doc = win.document;
+  const existing = doc.querySelector("dialog.marmara-downloads-dialog");
+  if (existing) {
+    existing.querySelector("iframe")?.focus();
+    return;
+  }
+  const frame = create(doc, "iframe", { className: "marmara-panel-frame marmara-downloads-frame" });
+  const dialog = create(doc, "dialog", { className: "marmara-downloads-dialog" }, frame);
+  frame.addEventListener("MarmaraPanelClose", () => dialog.close());
+  dialog.addEventListener("close", () => dialog.remove());
+  try {
+    const rect = win.gBrowser.selectedBrowser.getBoundingClientRect();
+    dialog.style.insetBlock = `${Math.round(rect.top)}px ${Math.max(0, Math.round(win.innerHeight - rect.bottom))}px`;
+  } catch (e) {
+    // ölçülemezse pencerenin ortası
+  }
+  win.MozXULElement.insertFTLIfNeeded("browser/marmara.ftl");
+  doc.documentElement.append(dialog);
+  dialog.showModal();
+  frame.src = "chrome://browser/content/marmara-panels/downloads.html";
+  frame.addEventListener("load", () => frame.contentWindow?.focus(), { once: true });
 }
 
 export const MarmaraSettings = {
@@ -1215,6 +1514,16 @@ export const MarmaraSettings = {
     }
     const start = PANE_ALIASES.find(([pattern]) => pattern.test(paneID ?? ""))?.[1] ?? "general";
     new SettingsDialog(win).open(start);
+  },
+
+  /** İndirilenler kutusunu tarayıcı penceresinin içinde açar */
+  showDownloads(win) {
+    showDownloadsDialog(win);
+  },
+
+  /** İçe aktarma sihirbazını tarayıcı penceresinin içinde açar */
+  showMigration(win, options) {
+    showMigrationDialog(win, options);
   },
 };
 

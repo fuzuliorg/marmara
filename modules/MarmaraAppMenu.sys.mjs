@@ -39,11 +39,12 @@ const GRID_BUTTONS = [
   ["appMenu-translate-button", "chrome://browser/skin/translations.svg"],
 ];
 
-// Geçmiş ve Yer imleri menüde alt sayfa yerine yan panelde (kenar çubuğu)
-// açılır, Epiphany'deki gibi.
+// Geçmiş, Yer imleri ve Parolalar menüde alt sayfa ya da ayrı sekme yerine yan
+// panelde (kenar çubuğu) açılır. Panellerin kendisi panels/ klasöründe.
 const SIDEBAR_BUTTONS = {
   "appMenu-history-button": "viewHistorySidebar",
   "appMenu-bookmarks-button": "viewBookmarksSidebar",
+  "appMenu-passwords-button": "viewCPMSidebar",
 };
 
 const ZOOM_MIN = 30;
