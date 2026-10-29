@@ -12,7 +12,10 @@
 #BMB_viewBookmarksToolbar,
 #toolbar-context-toggle-vertical-tabs,
 #sidebar-context-menu-enable-vertical-tabs,
-#fxa-toolbar-menu-button {
+#fxa-toolbar-menu-button,
+/* İndirilenler araç çubuğunda yok: indirme başlayınca yan panel açılır,
+ * elle de hamburger menüsünden açılır. */
+#downloads-button {
   display: none !important;
 }
 

@@ -305,7 +305,8 @@ function scheduleRender() {
 }
 
 async function init() {
-  if (window.frameElement) {
+  // Yalnızca tarayıcı içindeki kutuda (iframe) saydam; yan panelde Geçmiş gibi opak
+  if (window.frameElement?.classList.contains("marmara-panel-frame")) {
     document.documentElement.classList.add("mm-embedded");
   }
   const menu = menuButton({

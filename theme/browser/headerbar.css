@@ -59,7 +59,13 @@
   opacity: var(--inactive-titlebar-opacity);
 }
 
-/* Başlık çubuğundaki "yeni sekme" düğmesi: GNOME Web'deki gibi düz bir "+" */
+/* Başlık çubuğundaki "yeni sekme" düğmesi: çerçeveli artı (Adwaita "tab-new") */
 #nav-bar #new-tab-button {
-  list-style-image: url("chrome://global/skin/icons/plus.svg");
+  list-style-image: url("chrome://browser/skin/new-tab.svg");
+}
+
+/* "Adresi göster" düğmesi (arama sonucu sayfalarında adres çubuğu arama sözcüklerini
+ * gösterirken tam adrese döner): zincir halkası */
+#urlbar-revert-button {
+  list-style-image: url("chrome://global/skin/icons/link.svg");
 }

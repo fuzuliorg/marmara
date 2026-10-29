@@ -107,7 +107,7 @@ Section "Marmara" SecMain
   WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayIcon" "$INSTDIR\marmara-bin.exe"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegStr HKCU "${UNINSTALL_KEY}" "URLInfoAbout" "https://github.com/fuzuliinitiative/marmara"
+  WriteRegStr HKCU "${UNINSTALL_KEY}" "URLInfoAbout" "https://github.com/fuzuliorg/marmara"
   WriteRegDWORD HKCU "${UNINSTALL_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${UNINSTALL_KEY}" "NoRepair" 1
 

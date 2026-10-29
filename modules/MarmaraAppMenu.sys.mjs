@@ -30,13 +30,13 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 // Simge ızgarasına taşınan Firefox düğmeleri ve simgeleri (sırasıyla)
 const GRID_BUTTONS = [
   ["appMenu-history-button", "chrome://browser/skin/history.svg"],
-  ["appMenu-bookmarks-button", "chrome://browser/skin/bookmark-hollow.svg"],
+  ["appMenu-bookmarks-button", "chrome://browser/skin/bookmark.svg"],
   ["appMenu-passwords-button", "chrome://browser/skin/login.svg"],
   ["appMenu-new-private-window-button2", "chrome://browser/skin/privateBrowsing.svg"],
   ["appMenu-print-button2", "chrome://global/skin/icons/print.svg"],
   ["appMenu-save-file-button2", "chrome://browser/skin/save.svg"],
   ["appMenu-find-button2", "chrome://global/skin/icons/search-glass.svg"],
-  ["appMenu-translate-button", "chrome://browser/skin/translations.svg"],
+  ["appMenu-downloads-button", "chrome://browser/skin/downloads/downloads.svg"],
 ];
 
 // Geçmiş, Yer imleri ve Parolalar menüde alt sayfa ya da ayrı sekme yerine yan
@@ -45,7 +45,35 @@ const SIDEBAR_BUTTONS = {
   "appMenu-history-button": "viewHistorySidebar",
   "appMenu-bookmarks-button": "viewBookmarksSidebar",
   "appMenu-passwords-button": "viewCPMSidebar",
+  "appMenu-downloads-button": "viewDownloadsSidebar",
 };
+
+/**
+ * Yer imi yıldızı adres çubuğunun dışına, solundaki araç çubuğuna taşınır.
+ * Öğe aynı kalır (Firefox yer imi durumunu ve açılan paneli kimliğiyle bulur),
+ * yalnızca bağlı olduğu yer değişir. Görünüm theme/browser/bookmarks.css'te.
+ */
+function moveBookmarkStar(win) {
+  let doc = win.document;
+  const move = () => {
+    let star = doc.getElementById("star-button-box");
+    let urlbar = doc.getElementById("urlbar-container");
+    if (!star || !urlbar?.parentNode || star.parentNode == urlbar.parentNode) {
+      return;
+    }
+    star.classList.add("marmara-star-outside");
+    urlbar.before(star);
+  };
+  move();
+  // Firefox sayfa eylemlerini yerleştirirken yıldızı adres çubuğuna geri koyar
+  // (başlatmada ve eylemler değişince); geri konursa yeniden dışarı alınır.
+  let buttons = doc.getElementById("page-action-buttons");
+  if (buttons) {
+    let observer = new win.MutationObserver(move);
+    observer.observe(buttons, { childList: true });
+    win.addEventListener("unload", () => observer.disconnect(), { once: true });
+  }
+}
 
 const ZOOM_MIN = 30;
 const ZOOM_MAX = 300;
@@ -268,6 +296,11 @@ export const MarmaraAppMenu = {
       return;
     }
     win.MozXULElement.insertFTLIfNeeded("browser/marmara.ftl");
+    try {
+      moveBookmarkStar(win);
+    } catch (e) {
+      console.error("Marmara yer imi yıldızı:", e);
+    }
     // Yan panel (geçmiş, yer imleri) önceki oturumdan açık gelmesin; yalnızca
     // menüden tıklanınca açılsın.
     win.requestIdleCallback(() => {

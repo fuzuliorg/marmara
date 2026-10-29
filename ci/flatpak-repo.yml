@@ -1,0 +1,150 @@
+# Marmara'nın kendi Flatpak deposunu (OSTree) GitHub Pages'te yayımlar.
+#
+# Her yeni Marmara release'inde: release arşivini Flatpak olarak paketler, GPG ile imzalar
+# ve https://fuzuliorg.github.io/marmara/ adresine koyar. Kullanıcılar bir kez
+# `flatpak install --user https://fuzuliorg.github.io/marmara/marmara.flatpakref`
+# ile kurar, sonra güncellemeler yazılım merkezinden (GNOME Software, Bazaar) kendiliğinden gelir.
+#
+# Gerekenler (bir kez): README'deki "Kendi Flatpak depomuz" bölümü.
+#   - Repository secret: FLATPAK_GPG_PRIVATE_KEY (imza anahtarının gizli kısmı, armor biçiminde)
+#   - Settings → Pages → Source: GitHub Actions
+#
+# Bu dosya GitHub'da .github/workflows/ altında durmalı.
+
+name: Flatpak deposu
+
+on:
+  workflow_run:
+    workflows: ["LibreWolf güncellemesi"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  repo:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SITE: https://fuzuliorg.github.io/marmara
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: En son release
+        id: release
+        run: |
+          tag="$(gh release view --json tagName --jq .tagName)"
+          version="${tag#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "url=https://github.com/${{ github.repository }}/releases/download/$tag/marmara-$version-linux-x86_64.tar.xz" >> "$GITHUB_OUTPUT"
+
+      - name: Zaten yayımlandı mı?
+        id: check
+        run: |
+          published="$(curl -fsS "$SITE/.version" 2>/dev/null || true)"
+          if [ "$published" = "${{ steps.release.outputs.version }}" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Araçları kur
+        if: steps.check.outputs.new == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder gnupg ostree librsvg2-common libgdk-pixbuf2.0-bin appstream
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08 org.mozilla.firefox.BaseApp//25.08
+
+      - name: İmza anahtarını içe aktar
+        if: steps.check.outputs.new == 'true'
+        id: gpg
+        env:
+          KEY: ${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}
+        run: |
+          printf '%s\n' "$KEY" | gpg --batch --import
+          id="$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: Manifesti son release'e ayarla
+        if: steps.check.outputs.new == 'true'
+        working-directory: flatpak
+        run: |
+          curl -fL --retry 3 -o marmara.tar.xz "${{ steps.release.outputs.url }}"
+          sha="$(sha256sum marmara.tar.xz | cut -d' ' -f1)"
+          # Yazılım merkezlerinde doğru sürüm görünsün
+          sed -i "s|<release version=\"[^\"]*\" date=\"[^\"]*\"/>|<release version=\"${{ steps.release.outputs.version }}\" date=\"$(date -u +%F)\"/>|" io.github.fuzuliorg.Marmara.metainfo.xml
+          python3 - "${{ steps.release.outputs.url }}" "$sha" <<'PY'
+          import re, sys
+          url, sha = sys.argv[1:3]
+          path = "io.github.fuzuliorg.Marmara.yml"
+          text = open(path, encoding="utf-8").read()
+          text = re.sub(r"(url: )https://github\.com/\S+marmara-\S+-linux-x86_64\.tar\.xz", lambda m: m.group(1) + url, text, count=1)
+          text = re.sub(r"(sha256: )\S+", lambda m: m.group(1) + sha, text, count=1)
+          open(path, "w", encoding="utf-8").write(text)
+          PY
+
+      - name: Flatpak'ı derle ve imzala
+        if: steps.check.outputs.new == 'true'
+        working-directory: flatpak
+        run: |
+          flatpak-builder --user --disable-rofiles-fuse --force-clean \
+            --gpg-sign="${{ steps.gpg.outputs.id }}" --repo=repo --default-branch=master \
+            build-dir io.github.fuzuliorg.Marmara.yml
+          flatpak build-update-repo --gpg-sign="${{ steps.gpg.outputs.id }}" --generate-static-deltas --prune repo
+
+      - name: Depo tanım dosyalarını yaz
+        if: steps.check.outputs.new == 'true'
+        working-directory: flatpak
+        run: |
+          key="$(gpg --export "${{ steps.gpg.outputs.id }}" | base64 -w0)"
+          cat > repo/marmara.flatpakrepo <<EOF
+          [Flatpak Repo]
+          Title=Marmara
+          Url=$SITE/
+          Homepage=https://github.com/${{ github.repository }}
+          Comment=Marmara web browser
+          Description=Privacy-focused web browser for GNOME
+          GPGKey=$key
+          RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+          EOF
+          cat > repo/marmara.flatpakref <<EOF
+          [Flatpak Ref]
+          Name=io.github.fuzuliorg.Marmara
+          Branch=master
+          Title=Marmara
+          IsRuntime=false
+          Url=$SITE/
+          GPGKey=$key
+          RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+          EOF
+          # Heredoc girintisini temizle
+          sed -i 's/^ *//' repo/marmara.flatpakrepo repo/marmara.flatpakref
+          echo "${{ steps.release.outputs.version }}" > repo/.version
+          touch repo/.nojekyll
+          cat > repo/index.html <<EOF
+          <!doctype html><meta charset="utf-8"><title>Marmara Flatpak</title>
+          <h1>Marmara</h1>
+          <p>Install: <code>flatpak install --user $SITE/marmara.flatpakref</code></p>
+          EOF
+          sed -i 's/^ *//' repo/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.check.outputs.new == 'true'
+        with:
+          path: flatpak/repo
+
+      - name: GitHub Pages'e yayımla
+        id: deploy
+        if: steps.check.outputs.new == 'true'
+        uses: actions/deploy-pages@v4

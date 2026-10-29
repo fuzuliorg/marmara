@@ -51,15 +51,15 @@ Marmara takes its inspiration from jellyfish, and so does its logo.
 ### Flatpak (Linux)
 
 ```sh
-flatpak remote-add --user marmara https://fuzuliinitiative.github.io/marmara/marmara.flatpakrepo
-flatpak install --user marmara io.github.fuzuliinitiative.Marmara
-flatpak run io.github.fuzuliinitiative.Marmara
+flatpak remote-add --user marmara https://fuzuliorg.github.io/marmara/marmara.flatpakrepo
+flatpak install --user marmara io.github.fuzuliorg.Marmara
+flatpak run io.github.fuzuliorg.Marmara
 ```
 
 Update with:
 
 ```sh
-flatpak update io.github.fuzuliinitiative.Marmara
+flatpak update io.github.fuzuliorg.Marmara
 ```
 
 Marmara tells you in **Settings → General → Updates** when a new version is out.
@@ -71,7 +71,7 @@ The repository is signed; the key is included in `marmara.flatpakrepo`.
 ### Windows
 
 Download `Marmara-<version>-windows-x86_64-setup.exe` from the
-[latest release](https://github.com/fuzuliinitiative/marmara/releases/latest) and run it.
+[latest release](https://github.com/fuzuliorg/marmara/releases/latest) and run it.
 No administrator rights are needed. It installs for your user, adds Start menu and
 desktop shortcuts, and can be removed from Windows *Installed apps* (your profile —
 bookmarks, history — is kept).
@@ -87,12 +87,29 @@ bookmarks, history — is kept).
 ### From the release archive (Linux)
 
 Download `marmara-<version>-linux-x86_64.tar.xz` from the
-[latest release](https://github.com/fuzuliinitiative/marmara/releases/latest), unpack it
+[latest release](https://github.com/fuzuliorg/marmara/releases/latest), unpack it
 and run `./marmara/marmara`.
+
+## What Marmara connects to
+
+Measured on a fresh install, left idle for five minutes with no page opened. Everything
+else only happens when you visit a site.
+
+| Address | Why |
+|---|---|
+| `ublockorigin.github.io`, `ublockorigin.pages.dev` | uBlock Origin updates its filter lists |
+| `rules2.clearurls.xyz` | ClearURLs updates its rules |
+| `*.cdn.mozilla.net` | Firefox's Remote Settings: certificate-revocation filters and block lists, verified with signatures |
+| `push.services.mozilla.com` | Firefox's push service, which tells the browser when new Remote Settings data is ready (also used for web push notifications). Left on so security updates arrive promptly |
+
+There is no telemetry, no Google, no sponsored content, and no account. Marmara checks
+for its own updates only when you press the button in Settings, and then talks to
+`api.github.com` and `github.com`. Terms of Service ratings are off unless you turn them
+on; if you do, the site's domain name is sent to ToS;DR.
 
 ## Reporting problems
 
-Open an [issue](https://github.com/fuzuliinitiative/marmara/issues/new). Marmara's
+Open an [issue](https://github.com/fuzuliorg/marmara/issues/new). Marmara's
 **About → Report an issue** button goes to the same place.
 
 ## Building it yourself

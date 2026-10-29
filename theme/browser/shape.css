@@ -17,6 +17,9 @@
   --tab-border-radius: 6px;
   --tab-padding-inline: 10px;
   --menuitem-border-radius: 6px;
+  /* GtkPopover: 12px köşe, kenarlarda 6px iç boşluk */
+  --panel-border-radius: 12px;
+  --panel-padding-block: 6px;
   --panel-menuitem-border-radius: 6px;
   --inactive-titlebar-opacity: 0.5;          /* libadwaita: arka plandaki pencere */
 }

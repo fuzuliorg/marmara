@@ -14,6 +14,7 @@
  *   appmenu.css    Sade uygulama menüsü (☰).
  *   about.css      "Hakkında" iletişim kutusu.
  *   settings.css   Ayarlar penceresi.
+ *   bookmarks.css  Yer imi ekle paneli.
  *   removed.css    Kaldırılan özellikler: yer imleri çubuğu, dikey sekmeler.
  *
  * Bir Firefox güncellemesi bir modülü bozarsa yalnızca o parça etkilenir.
@@ -31,4 +32,5 @@
 @import url("chrome://browser/skin/marmara/about.css");
 @import url("chrome://browser/skin/marmara/settings.css");
 @import url("chrome://browser/skin/marmara/welcome.css");
+@import url("chrome://browser/skin/marmara/bookmarks.css");
 @import url("chrome://browser/skin/marmara/removed.css");

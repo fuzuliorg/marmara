@@ -4,8 +4,7 @@
 
 /* about:marmara: Marmara'nın başlangıç ve yeni sekme sayfası.
  * Tarayıcının kendi sayfası olduğundan arama motorunu doğrudan tarayıcının
- * varsayılanıyla paylaşır; hiçbir dış kaynağa bağlanmaz. Kısayollar bir tarayıcı
- * ayarında (marmara.startpage.shortcuts) saklanır. */
+ * varsayılanıyla paylaşır; hiçbir dış kaynağa bağlanmaz. */
 
 const { SearchService } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchService.sys.mjs"
@@ -72,7 +71,6 @@ function translatePage() {
     el.setAttribute("aria-label", STRINGS[el.dataset.i18nAria]);
   }
 }
-const SHORTCUTS_PREF = "marmara.startpage.shortcuts";
 
 /* 1. Saat ve karşılama */
 function updateClock() {
@@ -125,7 +123,7 @@ async function buildMenu() {
       item.append(img, name);
       if (engine.id == current.id) {
         const check = document.createElement("i");
-        check.className = "ph-bold ph-check";
+        check.className = "ic ic-object-select";
         item.append(check);
       }
       item.addEventListener("click", async () => {
@@ -178,131 +176,8 @@ async function initSearch() {
   });
 }
 
-/* 3. Sık kullanılanlar */
-let shortcuts = [];
-
-function loadShortcuts() {
-  try {
-    const parsed = JSON.parse(Services.prefs.getStringPref(SHORTCUTS_PREF, "[]"));
-    shortcuts = Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    shortcuts = [];
-  }
-  renderShortcuts();
-}
-
-function saveShortcuts() {
-  Services.prefs.setStringPref(SHORTCUTS_PREF, JSON.stringify(shortcuts));
-}
-
-function normalizeUrl(raw) {
-  let url = raw.trim();
-  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-  try {
-    const parsed = new URL(url);
-    return parsed.hostname.includes(".") ? parsed.href : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-/* Ada göre renklendirilen ilk harf kutusu: site simgeleri için hiçbir yere
- * istek atılmaz. */
-function tileColor(text) {
-  let hash = 0;
-  for (const ch of text) hash = (hash * 31 + ch.codePointAt(0)) % 360;
-  return `hsl(${hash} 55% 45%)`;
-}
-
-function renderShortcuts() {
-  const grid = $("bookmarks-grid");
-  grid.replaceChildren();
-
-  if (shortcuts.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "empty";
-    empty.innerHTML = '<i class="ph ph-bookmarks"></i><p></p>';
-    empty.querySelector("p").textContent = STRINGS.empty;
-    grid.append(empty);
-    return;
-  }
-
-  shortcuts.forEach((item, index) => {
-    const tile = document.createElement("div");
-    tile.className = "tile";
-
-    const link = document.createElement("a");
-    link.href = normalizeUrl(item.url) || "about:blank";
-    link.title = item.name;
-    const icon = document.createElement("span");
-    icon.className = "icon";
-    icon.style.background = tileColor(item.name);
-    icon.textContent = [...item.name][0]?.toLocaleUpperCase(TR ? "tr" : undefined) ?? "?";
-    const label = document.createElement("span");
-    label.className = "name";
-    label.textContent = item.name;
-    link.append(icon, label);
-
-    const del = document.createElement("button");
-    del.type = "button";
-    del.title = STRINGS.remove;
-    del.dataset.index = String(index);
-    del.className = "delete-btn";
-    del.innerHTML = '<i class="ph ph-x"></i>';
-
-    tile.append(link, del);
-    grid.append(tile);
-  });
-}
-
-/* 4. Yeni kısayol penceresi */
-function openModal() {
-  $("error-msg").hidden = true;
-  $("bm-name").value = "";
-  $("bm-url").value = "";
-  $("modal").hidden = false;
-  $("bm-name").focus();
-}
-
-function closeModal() {
-  $("modal").hidden = true;
-}
-
-function initShortcuts() {
-  loadShortcuts();
-  $("add-btn").addEventListener("click", openModal);
-  $("modal-cancel").addEventListener("click", closeModal);
-  $("modal").addEventListener("click", e => {
-    if (e.target === $("modal")) closeModal();
-  });
-  document.addEventListener("keydown", e => {
-    if (e.key == "Escape") closeModal();
-  });
-  $("bookmarks-grid").addEventListener("click", e => {
-    const del = e.target.closest(".delete-btn");
-    if (!del) return;
-    shortcuts.splice(Number(del.dataset.index), 1);
-    saveShortcuts();
-    renderShortcuts();
-  });
-  $("add-form").addEventListener("submit", e => {
-    e.preventDefault();
-    const name = $("bm-name").value.trim();
-    const url = normalizeUrl($("bm-url").value);
-    if (!name || !url) {
-      $("error-msg").hidden = false;
-      return;
-    }
-    shortcuts.push({ name, url });
-    saveShortcuts();
-    renderShortcuts();
-    closeModal();
-  });
-}
-
 translatePage();
 setInterval(updateClock, 1000);
 updateClock();
-initShortcuts();
 initSearch().catch(e => console.error("Marmara başlangıç sayfası:", e));
 document.body.style.opacity = "1";

@@ -1,8 +1,8 @@
 # Marmara'nın kendi Flatpak deposunu (OSTree) GitHub Pages'te yayımlar.
 #
 # Her yeni Marmara release'inde: release arşivini Flatpak olarak paketler, GPG ile imzalar
-# ve https://fuzuliinitiative.github.io/marmara/ adresine koyar. Kullanıcılar bir kez
-# `flatpak install --user https://fuzuliinitiative.github.io/marmara/marmara.flatpakref`
+# ve https://fuzuliorg.github.io/marmara/ adresine koyar. Kullanıcılar bir kez
+# `flatpak install --user https://fuzuliorg.github.io/marmara/marmara.flatpakref`
 # ile kurar, sonra güncellemeler yazılım merkezinden (GNOME Software, Bazaar) kendiliğinden gelir.
 #
 # Gerekenler (bir kez): README'deki "Kendi Flatpak depomuz" bölümü.
@@ -36,7 +36,7 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     env:
       GH_TOKEN: ${{ github.token }}
-      SITE: https://fuzuliinitiative.github.io/marmara
+      SITE: https://fuzuliorg.github.io/marmara
     steps:
       - uses: actions/checkout@v4
 
@@ -83,11 +83,11 @@ jobs:
           curl -fL --retry 3 -o marmara.tar.xz "${{ steps.release.outputs.url }}"
           sha="$(sha256sum marmara.tar.xz | cut -d' ' -f1)"
           # Yazılım merkezlerinde doğru sürüm görünsün
-          sed -i "s|<release version=\"[^\"]*\" date=\"[^\"]*\"/>|<release version=\"${{ steps.release.outputs.version }}\" date=\"$(date -u +%F)\"/>|" io.github.fuzuliinitiative.Marmara.metainfo.xml
+          sed -i "s|<release version=\"[^\"]*\" date=\"[^\"]*\"/>|<release version=\"${{ steps.release.outputs.version }}\" date=\"$(date -u +%F)\"/>|" io.github.fuzuliorg.Marmara.metainfo.xml
           python3 - "${{ steps.release.outputs.url }}" "$sha" <<'PY'
           import re, sys
           url, sha = sys.argv[1:3]
-          path = "io.github.fuzuliinitiative.Marmara.yml"
+          path = "io.github.fuzuliorg.Marmara.yml"
           text = open(path, encoding="utf-8").read()
           text = re.sub(r"(url: )https://github\.com/\S+marmara-\S+-linux-x86_64\.tar\.xz", lambda m: m.group(1) + url, text, count=1)
           text = re.sub(r"(sha256: )\S+", lambda m: m.group(1) + sha, text, count=1)
@@ -100,7 +100,7 @@ jobs:
         run: |
           flatpak-builder --user --disable-rofiles-fuse --force-clean \
             --gpg-sign="${{ steps.gpg.outputs.id }}" --repo=repo --default-branch=master \
-            build-dir io.github.fuzuliinitiative.Marmara.yml
+            build-dir io.github.fuzuliorg.Marmara.yml
           flatpak build-update-repo --gpg-sign="${{ steps.gpg.outputs.id }}" --generate-static-deltas --prune repo
 
       - name: Depo tanım dosyalarını yaz
@@ -120,7 +120,7 @@ jobs:
           EOF
           cat > repo/marmara.flatpakref <<EOF
           [Flatpak Ref]
-          Name=io.github.fuzuliinitiative.Marmara
+          Name=io.github.fuzuliorg.Marmara
           Branch=master
           Title=Marmara
           IsRuntime=false

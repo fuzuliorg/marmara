@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.fuzuliinitiative.Marmara</id>
+  <id>io.github.fuzuliorg.Marmara</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MPL-2.0</project_license>
   <name>Marmara</name>
-  <developer id="io.github.fuzuliinitiative">
+  <developer id="io.github.fuzuliorg">
     <name>Fuzuli Initiative</name>
   </developer>
   <summary>Privacy-focused web browser for GNOME</summary>
@@ -14,16 +14,16 @@
     Service; Didn't Read rating in the address bar (off by default), and has simple, Adwaita-style settings.</p>
     <p>Marmara is not developed or endorsed by Mozilla or the LibreWolf project.</p>
   </description>
-  <launchable type="desktop-id">io.github.fuzuliinitiative.Marmara.desktop</launchable>
-  <url type="homepage">https://github.com/fuzuliinitiative/marmara</url>
-  <url type="bugtracker">https://github.com/fuzuliinitiative/marmara/issues</url>
+  <launchable type="desktop-id">io.github.fuzuliorg.Marmara.desktop</launchable>
+  <url type="homepage">https://marmara.fuzuli.org</url>
+  <url type="bugtracker">https://github.com/fuzuliorg/marmara/issues</url>
   <content_rating type="oars-1.1"/>
   <categories>
     <category>Network</category>
     <category>WebBrowser</category>
   </categories>
   <provides>
-    <id>io.github.fuzuliinitiative.Marmara.desktop</id>
+    <id>io.github.fuzuliorg.Marmara.desktop</id>
   </provides>
   <supports>
     <control>pointing</control>
@@ -35,19 +35,19 @@
   </requires>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/fuzuliinitiative/marmara/main/flatpak/screenshot-1.png</image>
+      <image>https://raw.githubusercontent.com/fuzuliorg/marmara/main/flatpak/screenshot-1.png</image>
       <caption>Adwaita-style tabs and address bar</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/fuzuliinitiative/marmara/main/flatpak/screenshot-2.png</image>
+      <image>https://raw.githubusercontent.com/fuzuliorg/marmara/main/flatpak/screenshot-2.png</image>
       <caption>Optional Terms of Service; Didn't Read rating in the address bar</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/fuzuliinitiative/marmara/main/flatpak/screenshot-3.png</image>
+      <image>https://raw.githubusercontent.com/fuzuliorg/marmara/main/flatpak/screenshot-3.png</image>
       <caption>Start page with search and shortcuts, in light and dark</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/fuzuliinitiative/marmara/main/flatpak/screenshot-4.png</image>
+      <image>https://raw.githubusercontent.com/fuzuliorg/marmara/main/flatpak/screenshot-4.png</image>
       <caption>Compact app menu</caption>
     </screenshot>
   </screenshots>

@@ -51,15 +51,15 @@ Marmara'nın ilham kaynağı deniz anaları, logosu da öyle.
 ### Flatpak (Linux)
 
 ```sh
-flatpak remote-add --user marmara https://fuzuliinitiative.github.io/marmara/marmara.flatpakrepo
-flatpak install --user marmara io.github.fuzuliinitiative.Marmara
-flatpak run io.github.fuzuliinitiative.Marmara
+flatpak remote-add --user marmara https://fuzuliorg.github.io/marmara/marmara.flatpakrepo
+flatpak install --user marmara io.github.fuzuliorg.Marmara
+flatpak run io.github.fuzuliorg.Marmara
 ```
 
 Güncellemek için:
 
 ```sh
-flatpak update io.github.fuzuliinitiative.Marmara
+flatpak update io.github.fuzuliorg.Marmara
 ```
 
 Yeni sürüm çıktığında Marmara bunu **Ayarlar → Genel → Güncellemeler** bölümünde söyler.
@@ -70,7 +70,7 @@ Depo imzalıdır. Anahtar `marmara.flatpakrepo` dosyasında bulunur.
 
 ### Windows
 
-[En son sürümden](https://github.com/fuzuliinitiative/marmara/releases/latest)
+[En son sürümden](https://github.com/fuzuliorg/marmara/releases/latest)
 `Marmara-<sürüm>-windows-x86_64-setup.exe` dosyasını indirip çalıştırın. Yönetici izni
 gerekmez. Yalnızca sizin kullanıcınız için kurulur, Başlat menüsü ve masaüstü kısayolu
 ekler, Windows'un *Yüklü uygulamalar* listesinden kaldırılabilir (profiliniz, yani yer
@@ -87,13 +87,30 @@ imleri ve geçmiş, silinmez).
 
 ### Sürüm arşivinden (Linux)
 
-[En son sürümden](https://github.com/fuzuliinitiative/marmara/releases/latest)
+[En son sürümden](https://github.com/fuzuliorg/marmara/releases/latest)
 `marmara-<sürüm>-linux-x86_64.tar.xz` dosyasını indirin, açın ve `./marmara/marmara`
 çalıştırın.
 
+## Marmara nereye bağlanır
+
+Temiz bir kurulumda, hiçbir sayfa açılmadan beş dakika boşta bırakılarak ölçüldü.
+Gerisi yalnızca bir siteye girdiğinizde olur.
+
+| Adres | Neden |
+|---|---|
+| `ublockorigin.github.io`, `ublockorigin.pages.dev` | uBlock Origin filtre listelerini günceller |
+| `rules2.clearurls.xyz` | ClearURLs kurallarını günceller |
+| `*.cdn.mozilla.net` | Firefox'un Remote Settings sistemi: sertifika iptal filtreleri ve engelleme listeleri, imzayla doğrulanır |
+| `push.services.mozilla.com` | Firefox'un push servisi: yeni Remote Settings verisi hazır olunca tarayıcıya haber verir (sitelerin web bildirimleri için de kullanılır). Güvenlik güncellemeleri hızlı gelsin diye açık bırakıldı |
+
+Telemetri, Google, sponsorlu içerik ve hesap yoktur. Marmara kendi güncellemesini
+yalnızca Ayarlar'daki düğmeye bastığınızda denetler ve o zaman `api.github.com` ile
+`github.com`'a bağlanır. Hizmet koşulları notları siz açmadıkça kapalıdır; açarsanız
+sitenin alan adı ToS;DR'a gönderilir.
+
 ## Sorun bildirme
 
-Bir [issue](https://github.com/fuzuliinitiative/marmara/issues/new) açın. Marmara'nın
+Bir [issue](https://github.com/fuzuliorg/marmara/issues/new) açın. Marmara'nın
 **Hakkında → Sorun bildir** düğmesi de aynı yere gider.
 
 ## Kendiniz derlemek
