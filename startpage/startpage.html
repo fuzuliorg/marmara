@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="title">Yeni Sekme</title>
   <link rel="icon" href="chrome://branding/content/icon32.png">
-  <link rel="stylesheet" href="chrome://browser/content/marmara/phosphor/regular/style.css">
-  <link rel="stylesheet" href="chrome://browser/content/marmara/phosphor/bold/style.css">
   <link rel="stylesheet" href="chrome://browser/content/marmara/startpage.css">
 </head>
 <body>
@@ -21,39 +19,14 @@
         <button type="button" id="engine-btn" class="engine-btn" aria-haspopup="menu">
           <img id="engine-icon" alt="" width="16" height="16">
           <span id="engine-name"></span>
-          <i class="ph ph-caret-down"></i>
+          <i class="ic ic-pan-down"></i>
         </button>
         <div id="engine-menu" class="menu" role="menu" hidden></div>
       </div>
       <input type="text" id="search-input" autocomplete="off" autofocus>
-      <button type="submit" class="go" data-i18n-aria="search"><i class="ph ph-arrow-right"></i></button>
+      <button type="submit" class="go" data-i18n-aria="search"><i class="ic ic-go-next"></i></button>
     </form>
-
-    <section class="card">
-      <div class="card-head">
-        <h2 data-i18n="shortcuts">Sık Kullanılanlar</h2>
-        <button id="add-btn" type="button" class="flat"><i class="ph-bold ph-plus"></i> <span data-i18n="add">Ekle</span></button>
-      </div>
-      <div id="bookmarks-grid" class="grid"></div>
-    </section>
   </main>
-
-  <div id="modal" class="scrim" hidden>
-    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
-      <h3 id="dialog-title" data-i18n="newShortcut">Yeni Kısayol</h3>
-      <form id="add-form">
-        <label for="bm-name" data-i18n="titleLabel">Başlık</label>
-        <input type="text" id="bm-name" data-i18n-placeholder="titlePlaceholder" required>
-        <label for="bm-url" data-i18n="urlLabel">Web adresi</label>
-        <input type="text" id="bm-url" data-i18n-placeholder="urlPlaceholder" required>
-        <p id="error-msg" class="error" data-i18n="urlError" hidden>Lütfen geçerli bir adres girin.</p>
-        <div class="actions">
-          <button type="button" id="modal-cancel" class="btn" data-i18n="cancel">İptal</button>
-          <button type="submit" class="btn suggested" data-i18n="save">Kaydet</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <script type="module" src="chrome://browser/content/marmara/startpage.js"></script>
 </body>

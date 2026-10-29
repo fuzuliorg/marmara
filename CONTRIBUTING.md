@@ -71,7 +71,7 @@ If there is no "HATA" (error) and no ✗ in the theme check, the version is fine
   a new Firefox, it opens an issue.
 - **Flatpak deposu** (`flatpak-repo.yml`) runs after a release: it packages the Flatpak,
   signs it with GPG and publishes the repository to GitHub Pages
-  (`https://fuzuliinitiative.github.io/marmara/`).
+  (`https://fuzuliorg.github.io/marmara/`).
 
 Set-up (once):
 
@@ -96,8 +96,8 @@ About dialog, `distribution.ini` and the `.desktop` file together).
 sha256sum marmara-<version>-linux-x86_64.tar.xz   # put the output in the manifest's sha256
 flatpak install flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08 org.mozilla.firefox.BaseApp//25.08
 cd flatpak
-flatpak-builder --user --install --force-clean build-dir io.github.fuzuliinitiative.Marmara.yml
-flatpak run io.github.fuzuliinitiative.Marmara
+flatpak-builder --user --install --force-clean build-dir io.github.fuzuliorg.Marmara.yml
+flatpak run io.github.fuzuliorg.Marmara
 ```
 
 ## Trademark

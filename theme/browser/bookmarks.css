@@ -1,0 +1,241 @@
+/* Yer imi ekle / düzenle paneli: AdwEntry, AdwComboRow ve AdwButton görünümü.
+ * Firefox'un kendi düzenini korur; yalnızca renk, köşe ve ölçüleri
+ * libadwaita'ya yaklaştırır (34px alanlar, 6px köşe, kalın başlık). */
+
+#editBookmarkPanel {
+  font: message-box;
+
+  > .panel-header {
+    padding-block: 12px 6px;
+    justify-content: center;
+
+    h1 {
+      margin: 0;
+      font-size: 1.1em;
+      font-weight: 700;
+    }
+  }
+
+  > #editBookmarkHeaderSeparator {
+    display: none;
+  }
+}
+
+#editBookmarkPanelContent {
+  padding: 6px 12px 12px;
+  gap: 4px;
+
+  /* Etiketler: libadwaita "caption-heading" */
+  > label:not(.editBMPanel_selectionCount),
+  label[control] {
+    margin: 8px 2px 2px;
+    padding: 0;
+    font-size: 0.9em;
+    font-weight: 700;
+    opacity: 0.75;
+  }
+}
+
+/* Metin alanları: AdwEntry */
+#editBookmarkPanel :is(html|input[type="text"], #editBMPanel_tagsField) {
+  appearance: none;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 2px solid transparent;
+  border-radius: var(--button-border-radius, 6px);
+  background-color: var(--mm-button);
+  color: inherit;
+  font: inherit;
+
+  &:hover {
+    background-color: var(--mm-button-hover);
+  }
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--mm-accent);
+    outline: none;
+    background-color: var(--mm-button);
+  }
+}
+
+/* Klasör seçici: AdwComboRow gibi düz, dolgulu düğme */
+#editBMPanel_folderMenuList {
+  appearance: none;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 10px;
+  border: 2px solid transparent;
+  border-radius: var(--button-border-radius, 6px);
+  background-color: var(--mm-button);
+  color: inherit;
+  font-weight: 700;
+
+  &:hover {
+    background-color: var(--mm-button-hover);
+  }
+
+  &:is([open], :active) {
+    background-color: var(--mm-button-active);
+  }
+
+  &:focus-visible {
+    border-color: var(--mm-accent);
+    outline: none;
+  }
+
+  &::part(icon) {
+    width: 16px;
+    height: 16px;
+    margin-inline-end: 8px;
+  }
+}
+
+/* Klasör açılır listesi: GtkPopover içinde düz satırlar */
+#editBMPanel_folderMenuList menupopup {
+  --panel-padding: 6px;
+  padding: 6px;
+  border-radius: var(--panel-border-radius, 12px);
+  border: 1px solid var(--mm-border);
+  background-color: var(--mm-popover-bg);
+
+  menuitem,
+  menu {
+    min-height: 34px;
+    padding-inline: 10px;
+    border-radius: var(--panel-menuitem-border-radius, 6px);
+    border: none;
+    margin: 0;
+
+    &[_moz-menuactive="true"] {
+      background-color: var(--mm-hover);
+      color: inherit;
+    }
+
+    &[selected="true"] {
+      background-color: var(--mm-selected);
+    }
+  }
+
+  menuseparator {
+    margin: 6px 0;
+    border: none;
+    border-top: 1px solid var(--mm-border);
+    padding: 0;
+  }
+}
+
+/* Genişlet / daralt ve "Yeni klasör" düğmeleri: AdwButton */
+#editBookmarkPanel :is(.expander-up, .expander-down, #editBMPanel_newFolderButton) {
+  min-height: 34px;
+  border: none;
+  border-radius: var(--button-border-radius, 6px);
+  background-color: var(--mm-button);
+
+  &:hover {
+    background-color: var(--mm-button-hover);
+  }
+
+  &:hover:active {
+    background-color: var(--mm-button-active);
+  }
+}
+
+#editBookmarkPanel :is(.expander-up, .expander-down) {
+  min-width: 34px;
+}
+
+/* Alt düğmeler: "Kaydet" önerilen (suggested-action), "Sil" düz */
+#editBookmarkPanel .panel-footer {
+  gap: 6px;
+  padding: 6px 12px 12px;
+  margin: 0;
+}
+
+#editBookmarkPanel .panel-footer > button {
+  appearance: none;
+  min-height: 34px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--button-border-radius, 6px);
+  background-color: var(--mm-button);
+  color: inherit;
+  font-weight: 700;
+
+  &:hover {
+    background-color: var(--mm-button-hover);
+  }
+
+  &:hover:active {
+    background-color: var(--mm-button-active);
+  }
+
+  &#editBookmarkPanelDoneButton,
+  &[default] {
+    background-color: var(--mm-accent-bg);
+    color: var(--mm-accent-fg);
+
+    &:hover {
+      background-color: color-mix(in srgb, var(--mm-accent-bg) 90%, white);
+    }
+
+    &:hover:active {
+      background-color: color-mix(in srgb, var(--mm-accent-bg) 80%, black);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mm-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Etiket (tag) listesi: yuvarlak köşeli kart */
+#editBMPanel_tagsSelector,
+#editBMPanel_folderTree {
+  border: none;
+  border-radius: var(--button-border-radius, 6px);
+  background-color: var(--mm-button);
+}
+
+/* ---- Yer imi yıldızı: adres çubuğunun dışında, solunda ----
+ * Öğeyi modules/MarmaraAppMenu.sys.mjs araç çubuğuna taşır; burada düz bir
+ * araç çubuğu düğmesi gibi (34px, 6px köşe) görünür. Sayfa yer imi
+ * eklenemiyorsa (örn. boş sayfa) Firefox öğeyi kendisi gizler. */
+#star-button-box.marmara-star-outside {
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  margin-block: 0;
+  margin-inline: 3px;
+  padding: 0;
+  border-radius: var(--toolbarbutton-border-radius, 6px);
+  background: transparent;
+
+  &:not([hidden]) {
+    display: flex;
+  }
+
+  &:hover {
+    background-color: var(--mm-hover);
+  }
+
+  &:hover:active,
+  &[open] {
+    background-color: var(--mm-active);
+  }
+
+  > #star-button {
+    margin: 0;
+    padding: 0;
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor;
+  }
+}

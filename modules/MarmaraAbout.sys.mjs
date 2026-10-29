@@ -19,8 +19,8 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 // Sürüm numarası distribution.ini ile aynı tutulur.
 const VERSION = "1.0";
 export const MARMARA_VERSION = VERSION;
-const WEBSITE = "https://github.com/fuzuliinitiative/marmara";
-const REPORT_ISSUE = "https://github.com/fuzuliinitiative/marmara/issues/new";
+const WEBSITE = "https://marmara.fuzuli.org";
+const REPORT_ISSUE = "https://github.com/fuzuliorg/marmara/issues/new";
 
 const ICON_EXTERNAL = "chrome://global/skin/icons/open-in-new.svg";
 const ICON_NEXT = "chrome://global/skin/icons/arrow-right.svg";
@@ -246,4 +246,3 @@ export const MarmaraAbout = {
     new AboutDialog(win).open();
   },
 };
-// Marmara hakkında penceresi
