@@ -41,7 +41,7 @@ const PREF_LOCALE = "intl.locale.requested";
 // En son sürüm, projenin en son release'inin etiketidir ("v1.1" ya da "1.1").
 const GITHUB_PROJECT = "fuzuliorg/marmara";
 const UPDATE_TIMEOUT_MS = 10000;
-const FLATPAK_ID = "io.github.fuzuliorg.Marmara";
+const FLATPAK_ID = "io.github.fuzuliinitiative.Marmara";
 const ADDON_FALLBACK_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const ADDON_SEARCH_URL = "https://addons.mozilla.org/";
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
@@ -695,9 +695,17 @@ const PAGES = [
             k: "import",
             icon: "arrow-right",
             run: (win, row) => {
-              const { MigrationUtils } = ChromeUtils.importESModule(
-                "resource:///modules/MigrationUtils.sys.mjs"
-              );
+              // Firefox 159'dan beri modül moz-src:/// altında (eski yol resource:///modules/)
+              let MigrationUtils;
+              try {
+                ({ MigrationUtils } = ChromeUtils.importESModule(
+                  "moz-src:///browser/components/migration/MigrationUtils.sys.mjs"
+                ));
+              } catch (e) {
+                ({ MigrationUtils } = ChromeUtils.importESModule(
+                  "resource:///modules/MigrationUtils.sys.mjs"
+                ));
+              }
               // Ayarlar kapanır; sihirbaz about:preferences yerine kendi
               // penceresinde açılır (opener verilmezse bağımsız pencere kullanılır)
               row.closest("dialog")?.close();
