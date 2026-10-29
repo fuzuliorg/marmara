@@ -41,7 +41,7 @@ const PREF_LOCALE = "intl.locale.requested";
 // En son sürüm, projenin en son release'inin etiketidir ("v1.1" ya da "1.1").
 const GITHUB_PROJECT = "fuzuliorg/marmara";
 const UPDATE_TIMEOUT_MS = 10000;
-const FLATPAK_ID = "io.github.fuzuliinitiative.Marmara";
+const FLATPAK_ID = "io.github.fuzuliorg.Marmara";
 const ADDON_FALLBACK_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const ADDON_SEARCH_URL = "https://addons.mozilla.org/";
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
