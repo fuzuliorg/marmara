@@ -655,6 +655,23 @@ def install_panels(browser: pathlib.Path, gre: pathlib.Path) -> None:
                  f'          url: "{PANELS_URL}bookmarks.html",')
     replace_once(sidebar, 'url: "chrome://global/content/megalist/megalist.html",',
                  f'url: "{PANELS_URL}passwords.html",')
+    # İndirilenler de Geçmiş ve Yer imleri gibi yan panelde açılır
+    replace_once(sidebar, '''      [
+        "viewBookmarksSidebar",''',
+                 f'''      [
+        "viewDownloadsSidebar",
+        this.makeSidebar({{
+          name: "downloads",
+          elementId: "sidebar-switcher-downloads",
+          url: "{PANELS_URL}downloads.html",
+          menuId: "menu_downloadsSidebar",
+          menuL10nId: "menu-view-history-button",
+          revampL10nId: "sidebar-menu-history-label",
+          iconUrl: "chrome://browser/skin/downloads/downloads.svg",
+        }}),
+      ],
+      [
+        "viewBookmarksSidebar",''')
 
     replace_once(
         need(gre / "modules/LoginHelper.sys.mjs"),
@@ -715,7 +732,7 @@ def install_panels(browser: pathlib.Path, gre: pathlib.Path) -> None:
     replace_once(sidebar,
         "  async show(commandID, triggerNode) {\n",
         "  async show(commandID, triggerNode) {\n    this._marmaraCloseCancel();\n")
-    # İndirilenler: Kitaplık penceresi yerine tarayıcı içinde kendi kutumuz
+    # İndirilenler: Kitaplık penceresi yerine yan panel
     replace_once(
         need(browser / "chrome/browser/content/browser/browser-commands.js"),
         '''    } else {
@@ -723,14 +740,30 @@ def install_panels(browser: pathlib.Path, gre: pathlib.Path) -> None:
     }''',
         '''    } else {
       try {
-        ChromeUtils.importESModule(
-          "resource:///modules/MarmaraSettings.sys.mjs"
-        ).MarmaraSettings.showDownloads(window);
+        window.SidebarController.toggle("viewDownloadsSidebar");
       } catch (e) {
         console.error("Marmara indirilenler:", e);
         PlacesCommandHook.showPlacesOrganizer("Downloads");
       }
     }''',
+    )
+    # Bir şey indirilince (ya da indirme paneli istenince) Firefox'un açılır paneli
+    # yerine İndirilenler yan paneli açılır; araç çubuğu düğmesi artık yok.
+    replace_once(
+        need(browser / "chrome/browser/content/browser/downloads/downloads.js"),
+        "  showPanel(openedManually = false, isKeyPress = false) {\n",
+        """  showPanel(openedManually = false, isKeyPress = false) {
+    try {
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        BrowserCommands.downloadsUI();
+      } else {
+        window.SidebarController.show("viewDownloadsSidebar");
+      }
+      return;
+    } catch (e) {
+      console.error("Marmara indirilenler:", e);
+    }
+""",
     )
     log("yan paneller: Geçmiş, Yer imleri, Parolalar (Adwaita), parolalar yan panelde")
 
@@ -758,10 +791,10 @@ ADDON_ENTRY_POINTS = [
      '    this.openAddonsMgr("addons://detail/" + encodeURIComponent(addon.id));',
      '    openPreferences("paneExtensions");'),
     ("chrome/browser/content/browser/browser-sets.js",
-     '''            BrowserAddonUI.openAddonsMgr();
-            if (event.sourceEvent?.target.id == "key_openAddons") {''',
-     '''            openPreferences("paneExtensions");
-            if (event.sourceEvent?.target.id == "key_openAddons") {'''),
+     # 158'de bu satırın ardından "key_openAddons" bloğu vardı, 159'da yok; satırın
+     # kendisi iki sürümde de tek kez geçer.
+     "            BrowserAddonUI.openAddonsMgr();\n",
+     '            openPreferences("paneExtensions");\n'),
 ]
 
 
@@ -849,6 +882,19 @@ def patch_migration_style(browser: pathlib.Path) -> None:
     }
 """)
     log("içe aktarma sihirbazı: Adwaita görünümü")
+
+
+def patch_adwaita_icons(browser: pathlib.Path, gre: pathlib.Path) -> None:
+    """Araç çubuğu, menü ve arayüz simgelerini GNOME'un Adwaita simgeleriyle değiştirir."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("adwaita_icons", ROOT / "scripts" / "adwaita_icons.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    done, missing = mod.apply(browser, gre)
+    for item in missing:
+        print(f"  ! simge atlandı (bu sürümde yok): {item}")
+    log(f"simgeler: {done} simge Adwaita sembolik simgeleriyle değiştirildi")
 
 
 # Gizlilik ve güvenlik sayfasındaki metinler: (tr, en-US). None = o satır kaldırılır.
@@ -1128,6 +1174,7 @@ def main() -> int:
         ("yan paneller", lambda: install_panels(args.browser, args.gre)),
         ("uzantı girişleri", lambda: patch_addon_entry_points(args.browser)),
         ("içe aktarma", lambda: patch_migration_style(args.browser)),
+        ("simgeler", lambda: patch_adwaita_icons(args.browser, args.gre)),
         ("diller", lambda: prune_locales(args.browser, args.gre)),
         ("araç çubuğu", lambda: patch_default_toolbar(args.gre)),
         ("arama", lambda: patch_default_search(args.browser)),
