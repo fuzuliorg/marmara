@@ -817,7 +817,7 @@ def patch_addon_entry_points(browser: pathlib.Path) -> None:
     log(f"uzantı girişleri: {len(ADDON_ENTRY_POINTS)} yer Ayarlar > Uzantılar'a yönlendirildi")
 
 
-def patch_migration_style(browser: pathlib.Path) -> None:
+def patch_migration_style(browser: pathlib.Path, gre: pathlib.Path) -> None:
     """İçe aktarma sihirbazını (kendi penceresinde açılır) Adwaita görünümüne getirir."""
     skin = need(browser / "chrome/browser/skin/classic/browser/migration")
     extra = (ROOT / "theme/browser/migration.css").read_text(encoding="utf-8")
@@ -862,7 +862,15 @@ def patch_migration_style(browser: pathlib.Path) -> None:
   },
 """)
     # Tüm giriş noktaları (Dosya menüsü, yer imleri, yeni sekme) kutuyu kullansın
-    replace_once(need(browser / "modules/MigrationUtils.sys.mjs"),
+    # Firefox 159'dan beri MigrationUtils kök omni.ja'da moz-src/ altında; eskiden browser/modules/
+    utils = next((p for p in (
+        browser / "modules/MigrationUtils.sys.mjs",
+        gre / "moz-src/browser/components/migration/MigrationUtils.sys.mjs",
+        browser / "moz-src/browser/components/migration/MigrationUtils.sys.mjs",
+    ) if p.exists()), None)
+    if utils is None:
+        raise PatchError("MigrationUtils.sys.mjs bulunamadı (modules/ ve moz-src/ altında arandı)")
+    replace_once(utils,
                  "  showMigrationWizard(aOpener, aOptions) {\n",
                  """  showMigrationWizard(aOpener, aOptions) {
     // Marmara: tarayıcı penceresinde kendi kutusunda aç
@@ -1173,7 +1181,7 @@ def main() -> int:
         ("modüller", lambda: install_modules(args.browser)),
         ("yan paneller", lambda: install_panels(args.browser, args.gre)),
         ("uzantı girişleri", lambda: patch_addon_entry_points(args.browser)),
-        ("içe aktarma", lambda: patch_migration_style(args.browser)),
+        ("içe aktarma", lambda: patch_migration_style(args.browser, args.gre)),
         ("simgeler", lambda: patch_adwaita_icons(args.browser, args.gre)),
         ("diller", lambda: prune_locales(args.browser, args.gre)),
         ("araç çubuğu", lambda: patch_default_toolbar(args.gre)),
