@@ -24,12 +24,12 @@ SetCompressorDictSize 64
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
 
-Name "Marmara"
+Name "Marmara Browser"
 OutFile "${OUTFILE}"
 InstallDir "$LOCALAPPDATA\Programs\Marmara"
 InstallDirRegKey HKCU "Software\Marmara" "InstallDir"
 RequestExecutionLevel user
-BrandingText "Marmara ${VERSION}"
+BrandingText "Marmara Browser ${VERSION}"
 
 !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\Marmara"
 
@@ -77,8 +77,10 @@ Section "Marmara" SecMain
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
   ; Kısayollar: doğrudan marmara-bin.exe + -app
-  CreateShortcut "$SMPROGRAMS\Marmara.lnk" "$INSTDIR\marmara-bin.exe" '-app "$INSTDIR\browser\application.ini"' "$INSTDIR\marmara-bin.exe" 0
-  CreateShortcut "$DESKTOP\Marmara.lnk" "$INSTDIR\marmara-bin.exe" '-app "$INSTDIR\browser\application.ini"' "$INSTDIR\marmara-bin.exe" 0
+  Delete "$SMPROGRAMS\Marmara.lnk"
+  Delete "$DESKTOP\Marmara.lnk"
+  CreateShortcut "$SMPROGRAMS\Marmara Browser.lnk" "$INSTDIR\marmara-bin.exe" '-app "$INSTDIR\browser\application.ini"' "$INSTDIR\marmara-bin.exe" 0
+  CreateShortcut "$DESKTOP\Marmara Browser.lnk" "$INSTDIR\marmara-bin.exe" '-app "$INSTDIR\browser\application.ini"' "$INSTDIR\marmara-bin.exe" 0
 
   WriteRegStr HKCU "Software\Marmara" "InstallDir" "$INSTDIR"
 
@@ -87,7 +89,7 @@ Section "Marmara" SecMain
   WriteRegStr HKCU "${BROWSER_KEY}" "" "Marmara"
   WriteRegStr HKCU "${BROWSER_KEY}\DefaultIcon" "" "$INSTDIR\marmara-bin.exe,0"
   WriteRegStr HKCU "${BROWSER_KEY}\shell\open\command" "" '"$INSTDIR\marmara-bin.exe" -app "$INSTDIR\browser\application.ini"'
-  WriteRegStr HKCU "${BROWSER_KEY}\Capabilities" "ApplicationName" "Marmara"
+  WriteRegStr HKCU "${BROWSER_KEY}\Capabilities" "ApplicationName" "Marmara Browser"
   WriteRegStr HKCU "${BROWSER_KEY}\Capabilities" "ApplicationDescription" "Basit ve şeffaf web tarayıcısı"
   WriteRegStr HKCU "${BROWSER_KEY}\Capabilities\URLAssociations" "http" "MarmaraURL"
   WriteRegStr HKCU "${BROWSER_KEY}\Capabilities\URLAssociations" "https" "MarmaraURL"
@@ -101,9 +103,9 @@ Section "Marmara" SecMain
   WriteRegStr HKCU "Software\Classes\MarmaraHTML" "" "Marmara HTML"
   WriteRegStr HKCU "Software\Classes\MarmaraHTML\DefaultIcon" "" "$INSTDIR\marmara-bin.exe,0"
   WriteRegStr HKCU "Software\Classes\MarmaraHTML\shell\open\command" "" '"$INSTDIR\marmara-bin.exe" -app "$INSTDIR\browser\application.ini" -osint -url "%1"'
-  WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayName" "Marmara"
+  WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayName" "Marmara Browser"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKCU "${UNINSTALL_KEY}" "Publisher" "Fuzuliinitiative"
+  WriteRegStr HKCU "${UNINSTALL_KEY}" "Publisher" "Fuzuli Initiative"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayIcon" "$INSTDIR\marmara-bin.exe"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
@@ -124,6 +126,8 @@ Section "Uninstall"
   ; Yanlışlıkla başka bir klasörü silmemek için: Marmara'nın kendi dosyası yoksa durur
   IfFileExists "$INSTDIR\marmara-bin.exe" +2 0
     Abort
+  Delete "$SMPROGRAMS\Marmara Browser.lnk"
+  Delete "$DESKTOP\Marmara Browser.lnk"
   Delete "$SMPROGRAMS\Marmara.lnk"
   Delete "$DESKTOP\Marmara.lnk"
   RMDir /r "$INSTDIR"

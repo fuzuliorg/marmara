@@ -4,8 +4,8 @@
 
 -brand-shorter-name = Marmara
 -brand-short-name = Marmara
--brand-full-name = Marmara
--brand-shortcut-name = Marmara
--brand-product-name = Marmara
+-brand-full-name = Marmara Browser
+-brand-shortcut-name = Marmara Browser
+-brand-product-name = Marmara Browser
 -vendor-short-name = Marmara
 trademarkInfo = { " " }

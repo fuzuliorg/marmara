@@ -63,9 +63,13 @@ def patch_brand_files(browser: pathlib.Path) -> None:
     props = list(browser.glob("chrome/*/locale/branding/brand.properties"))
     if not ftl or not dtd or not props:
         raise PatchError("marka dosyaları (brand.ftl / brand.dtd / brand.properties) bulunamadı")
-    for files, src in ((ftl, "brand.ftl"), (dtd, "brand.dtd"), (props, "brand.properties")):
+    # Görünen ad: İngilizce ve diğer diller "Marmara Browser", Türkçe "Marmara Tarayıcı"
+    def locale_of(f: pathlib.Path) -> str:
+        return f.parent.parent.name if f.suffix == ".ftl" else f.parent.parent.parent.name
+
+    for files, src in ((ftl, "brand{}.ftl"), (dtd, "brand{}.dtd"), (props, "brand{}.properties")):
         for f in files:
-            shutil.copyfile(BRANDING / src, f)
+            shutil.copyfile(BRANDING / src.format(".tr" if locale_of(f) == "tr" else ""), f)
     log(f"marka adı: {len(ftl)} dil için brand.ftl, {len(dtd)} dil için brand.dtd/properties")
 
 
