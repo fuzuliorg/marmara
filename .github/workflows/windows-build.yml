@@ -236,9 +236,9 @@ jobs:
           foreach ($f in "marmara-bin.exe", "marmara.exe", "browser\application.ini", "omni.ja", "uninstall.exe") {
             if (-not (Test-Path "$dir\$f")) { Write-Host "::error::Kurulumda eksik: $f"; exit 1 }
           }
-          $menu = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Marmara.lnk"
+          $menu = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Marmara Browser.lnk"
           if (-not (Test-Path $menu)) { Write-Host "::error::Başlat menüsü kısayolu yok"; exit 1 }
-          $desktop = Join-Path ([Environment]::GetFolderPath("Desktop")) "Marmara.lnk"
+          $desktop = Join-Path ([Environment]::GetFolderPath("Desktop")) "Marmara Browser.lnk"
           if (-not (Test-Path $desktop)) { Write-Host "::warning::Masaüstü kısayolu yok ($desktop)" }
           $key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Marmara"
           if (-not (Test-Path $key)) { Write-Host "::error::Kaldırma kaydı yok"; exit 1 }
@@ -254,7 +254,7 @@ jobs:
         shell: pwsh
         run: |
           $sh = New-Object -ComObject WScript.Shell
-          $lnk = $sh.CreateShortcut((Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Marmara.lnk"))
+          $lnk = $sh.CreateShortcut((Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Marmara Browser.lnk"))
           $profile_dir = Join-Path $env:RUNNER_TEMP "marmara-profile3"
           New-Item -ItemType Directory -Force $profile_dir | Out-Null
           $p = Start-Process -FilePath $lnk.TargetPath `
@@ -296,6 +296,6 @@ jobs:
           # _?= ile kaldırıcı kendini kopyalamadan, bitene kadar bekler
           Start-Process "$dir\uninstall.exe" -ArgumentList "/S", "_?=$dir" -Wait
           if (Test-Path "$dir\marmara-bin.exe") { Write-Host "::error::Kaldırma dosyaları silmedi"; exit 1 }
-          if (Test-Path (Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Marmara.lnk")) { Write-Host "::error::Başlat menüsü kısayolu silinmedi"; exit 1 }
+          if (Test-Path (Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Marmara Browser.lnk")) { Write-Host "::error::Başlat menüsü kısayolu silinmedi"; exit 1 }
           if (Test-Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Marmara") { Write-Host "::error::Kaldırma kaydı silinmedi"; exit 1 }
           Write-Host "Kaldırma temiz."
