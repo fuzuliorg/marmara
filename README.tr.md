@@ -117,6 +117,10 @@ Bir [issue](https://github.com/fuzuliorg/marmara/issues/new) açın. Marmara'nı
 
 [CONTRIBUTING.md](CONTRIBUTING.md) dosyasına bakın.
 
+## Kullanım koşulları
+
+Marmara'yı kullanarak [kullanım koşullarını](TERMS.tr.md) ([English](TERMS.md)) kabul etmiş sayılırsınız.
+
 ## Lisans
 
 Marmara'nın kendi dosyaları ve LibreWolf/Firefox'tan değiştirilen dosyalar
