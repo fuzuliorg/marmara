@@ -33,7 +33,7 @@ During update checks, Marmara may connect to GitHub to find out the latest versi
 
 ## 6. License and trademark
 
-Marmara is provided under the Mozilla Public License 2.0; its source code is at https://github.com/fuzuliorg/marmara. The names Marmara Browser and Marmara Tarayıcı and the Marmara logo belong to Fuzuli Initiative and are also subject to the rules in the TRADEMARK.md file in the Marmara repository. The names and logos of LibreWolf, Firefox, GNOME and the search engines belong to their respective owners. Marmara's interface icons are based on the GNOME Adwaita icon theme (LGPL-3.0 or CC BY-SA 3.0); the license texts are in the licenses folder of the application package.
+Marmara is provided under the Mozilla Public License 2.0; its source code is at https://github.com/fuzuliorg/marmara. The names Marmara Browser and Marmara Tarayıcı and the Marmara logo belong to Fuzuli Initiative and are also subject to the rules in the TRADEMARK.md file in the Marmara repository. The names and logos of LibreWolf, Firefox, GNOME and the search engines belong to their respective owners. Marmara's interface icons are based on the GNOME Adwaita icon theme (LGPL-3.0 or CC BY-SA 3.0) and the start page uses the Inter typeface (SIL Open Font License 1.1); the license texts are in the licenses folder of the application package.
 
 ## 7. Disclaimer of warranty and limitation of liability
 

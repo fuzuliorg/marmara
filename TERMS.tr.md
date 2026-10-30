@@ -33,7 +33,7 @@ Güncelleme denetimlerinde Marmara, en son sürümü öğrenmek için GitHub’a
 
 ## 6. Lisans ve marka
 
-Marmara, Mozilla Public License 2.0 ile sunulur; kaynak kodu https://github.com/fuzuliorg/marmara adresindedir. Marmara Browser ve Marmara Tarayıcı adları ile logosu Fuzuli Initiative’e aittir ve ayrıca Marmara deposundaki TRADEMARK.md dosyasında yazılı kurallara tabidir. LibreWolf, Firefox, GNOME ve arama motorlarının adları ve logoları kendi sahiplerine aittir. Marmara’nın arayüz simgeleri GNOME Adwaita simge temasına dayanır (LGPL-3.0 ya da CC BY-SA 3.0); lisans metinleri uygulama paketindeki licenses klasöründedir.
+Marmara, Mozilla Public License 2.0 ile sunulur; kaynak kodu https://github.com/fuzuliorg/marmara adresindedir. Marmara Browser ve Marmara Tarayıcı adları ile logosu Fuzuli Initiative’e aittir ve ayrıca Marmara deposundaki TRADEMARK.md dosyasında yazılı kurallara tabidir. LibreWolf, Firefox, GNOME ve arama motorlarının adları ve logoları kendi sahiplerine aittir. Marmara’nın arayüz simgeleri GNOME Adwaita simge temasına dayanır (LGPL-3.0 ya da CC BY-SA 3.0) ve başlangıç sayfasında Inter yazı tipi (SIL Open Font License 1.1) kullanılır; lisans metinleri uygulama paketindeki licenses klasöründedir.
 
 ## 7. Garanti reddi ve sorumluluğun sınırı
 
