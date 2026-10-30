@@ -16,6 +16,9 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREF_DONE = "marmara.welcome.done";
+// Kullanım koşulları kabul edildiğinde yazılır; metin değişirse TERMS_VERSION artırılır
+const PREF_TERMS = "marmara.terms.version";
+const TERMS_VERSION = 1;
 const CHECK_ICON = "chrome://global/skin/icons/check.svg";
 const LOGO = "chrome://branding/content/about-logo.svg";
 
@@ -51,8 +54,10 @@ class WelcomeDialog {
     this.engines = [];
     this.engineChoice = null; // kullanıcı seçene kadar boş
     this.index = 0;
+    this.termsAccepted = Services.prefs.getIntPref(PREF_TERMS, 0) >= TERMS_VERSION;
     this.steps = [
       { key: "language", build: () => this.#languageList() },
+      { key: "terms", build: () => this.#termsList() },
       { key: "theme", build: () => this.#themeList() },
       { key: "tosdr", build: () => this.#tosdrList() },
       { key: "passwords", build: () => this.#passwordsList() },
@@ -81,6 +86,38 @@ class WelcomeDialog {
 
   #card(...rows) {
     return create(this.doc, "div", { className: "marmara-settings-card", attrs: { role: "radiogroup" } }, ...rows);
+  }
+
+  /** Kullanım koşulları: metin kaydırılabilir, kabul edilmeden ilerlenemez */
+  #termsList() {
+    const t = key => id(`terms-${key}`);
+    const el = (tag, key, className) => create(this.doc, tag, { className, l10n: t(key) });
+    const section = n => [el("h2", `${n}-h`, "marmara-welcome-terms-heading")];
+    const text = create(
+      this.doc,
+      "div",
+      { className: "marmara-settings-card marmara-welcome-terms", attrs: { tabindex: "0" } },
+      ...section(1), el("p", "1-p"),
+      ...section(2), el("p", "2-p"),
+      ...section(3), el("p", "3-p"),
+      ...section(4), el("p", "4-p1"), el("p", "4-p2"),
+      create(this.doc, "ul", {}, ...[1, 2, 3, 4].map(i => el("li", `4-li${i}`))),
+      ...section(5), el("p", "5-p"),
+      ...section(6), el("p", "6-p"),
+      ...section(7), el("p", "7-p"),
+      ...section(8), el("p", "8-p"),
+      ...section(9), el("p", "9-p"),
+      ...section(10), el("p", "10-p")
+    );
+    const accept = this.#choiceRow({
+      l10n: id("terms-accept"),
+      selected: this.termsAccepted,
+      onPick: () => {
+        this.termsAccepted = true;
+        Services.prefs.setIntPref(PREF_TERMS, TERMS_VERSION);
+      },
+    });
+    return create(this.doc, "div", {}, text, create(this.doc, "div", { className: "marmara-settings-card marmara-welcome-accept", attrs: { role: "radiogroup" } }, accept));
   }
 
   #languageList() {
@@ -163,10 +200,11 @@ class WelcomeDialog {
   #syncButtons() {
     const last = this.index == this.steps.length - 1;
     this.back.hidden = this.index == 0;
-    this.skip.hidden = last;
+    const onTerms = this.steps[this.index].key == "terms";
+    this.skip.hidden = last || onTerms;
     const needsRestart = this.shared.localeBinding.get() != this.initialLocale;
     this.next.setAttribute("data-l10n-id", id(last ? (needsRestart ? "restart" : "finish") : "next"));
-    this.next.disabled = last && this.engineChoice === null;
+    this.next.disabled = (last && this.engineChoice === null) || (onTerms && !this.termsAccepted);
     this.doc.l10n.translateFragment(this.footer);
     this.dots.forEach((dot, i) => dot.classList.toggle("current", i == this.index));
   }
@@ -243,6 +281,12 @@ class WelcomeDialog {
       this.footer
     );
     this.title.id = "marmara-welcome-heading";
+    // Koşullar kabul edilmeden Esc ile de kapatılamaz
+    this.dialog.addEventListener("cancel", event => {
+      if (!this.termsAccepted) {
+        event.preventDefault();
+      }
+    });
     // Hangi yolla kapanırsa kapansın bir daha gösterilmez
     this.dialog.addEventListener("close", () => {
       Services.prefs.setBoolPref(PREF_DONE, true);
