@@ -1,4 +1,4 @@
-# Marmara
+# Marmara Browser
 
 **Simple and transparent.**
 

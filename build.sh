@@ -158,6 +158,11 @@ if [ -d "$OUT/browser/chrome/icons/default" ]; then
   done
 fi
 install -Dm644 "$ROOT/branding/marmara-icon.svg" "$OUT/marmara.svg"
+# Lisans metinleri (MPL-2.0, Adwaita simgeleri) uygulama paketinin içinde, licenses/ klasöründe
+mkdir -p "$OUT/licenses"
+cp "$ROOT"/licenses/* "$OUT/licenses/"
+cp "$ROOT/branding/adwaita-icons/NOTICE.md" "$OUT/licenses/Adwaita-icons-NOTICE.md"
+cp "$ROOT/branding/adwaita-icons/AUTHORS" "$OUT/licenses/Adwaita-icons-AUTHORS"
 if [ "$PLATFORM" = windows ]; then
   MINGW="x86_64-w64-mingw32"
   for tool in "$MINGW-gcc" "$MINGW-windres"; do

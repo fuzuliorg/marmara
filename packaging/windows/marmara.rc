@@ -9,10 +9,10 @@ BEGIN
     BLOCK "040904B0"
     BEGIN
       VALUE "CompanyName", "Fuzuli Initiative"
-      VALUE "FileDescription", "Marmara"
+      VALUE "FileDescription", "Marmara Browser"
       VALUE "InternalName", "Marmara"
       VALUE "OriginalFilename", "marmara.exe"
-      VALUE "ProductName", "Marmara"
+      VALUE "ProductName", "Marmara Browser"
     END
   END
   BLOCK "VarFileInfo"

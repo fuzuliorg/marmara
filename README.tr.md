@@ -1,4 +1,4 @@
-# Marmara
+# Marmara Tarayıcı
 
 **Basit ve şeffaf.**
 

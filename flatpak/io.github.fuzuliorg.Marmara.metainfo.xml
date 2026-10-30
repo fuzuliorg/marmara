@@ -3,7 +3,8 @@
   <id>io.github.fuzuliorg.Marmara</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MPL-2.0</project_license>
-  <name>Marmara</name>
+  <name>Marmara Browser</name>
+  <name xml:lang="tr">Marmara Tarayıcı</name>
   <developer id="io.github.fuzuliorg">
     <name>Fuzuli Initiative</name>
   </developer>

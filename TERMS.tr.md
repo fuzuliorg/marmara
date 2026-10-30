@@ -1,12 +1,12 @@
 🇬🇧 [English](TERMS.md)
 
-# Marmara Kullanım Koşulları
+# Marmara Tarayıcı Kullanım Koşulları
 
 Sürüm 1 · Son güncelleme: 30.10.2026
 
 ## 1. Genel
 
-Marmara, mahremiyeti ön planda tutan bir web tarayıcısıdır. Uygulamadaki "Okudum ve kabul ediyorum" seçeneğini işaretlediğinizde aşağıda bulunan maddeleri kabul etmiş sayılırsınız.
+Marmara Tarayıcı (“Marmara”), mahremiyeti ön planda tutan bir web tarayıcısıdır. Uygulamadaki "Okudum ve kabul ediyorum" seçeneğini işaretlediğinizde aşağıda bulunan maddeleri kabul etmiş sayılırsınız.
 
 ## 2. Veri toplamama
 
@@ -14,7 +14,7 @@ Marmara’nın geliştiricileri olarak uygulama aracılığıyla sizden kendi ad
 
 ## 3. LibreWolf ve Firefox
 
-Marmara resmi olarak LibreWolf ile bağlantılı değildir; LibreWolf’un bir forkudur ve dolayısıyla Firefox üzerine kuruludur. LibreWolf, Firefox’un topladığı telemetri verilerini engellemeye çalışır, ancak bunun garantisini vermez. Bu bileşenlerin kendi lisansları geçerlidir.
+Marmara resmi olarak LibreWolf ile bağlantılı değildir; LibreWolf’un bir forkudur ve dolayısıyla Firefox üzerine kuruludur. LibreWolf, Firefox’un topladığı telemetri verilerini engellemeye çalışır, ancak bunun garantisini vermez. Bu bileşenlerin kendi lisansları geçerlidir. Marmara; Mozilla Vakfı, LibreWolf projesi ya da GNOME Projesi tarafından geliştirilmemiştir ve onlar tarafından onaylanmamıştır. Firefox, Mozilla Vakfı’nın; GNOME ise GNOME Vakfı’nın tescilli markasıdır.
 
 ## 4. Üçüncü taraf bileşenler ve hizmetler
 
@@ -24,7 +24,7 @@ Marmara ayrıca şu hizmetlerle, siz kullandığınızda ya da açtığınızda 
 
 - Seçtiğiniz arama motoru (arama yaptığınızda; arama önerileri varsayılan olarak kapalıdır)
 - Eklenti mağazası, addons.mozilla.org (eklenti kurarken ve güncellerken)
-- ToS;DR (yalnızca siz açarsanız, ziyaret ettiğiniz sitenin alan adı)
+- ToS;DR (yalnızca siz açarsanız, ziyaret ettiğiniz sitenin alan adı; ToS;DR verileri CC BY-SA lisansı ile sunulur)
 - Şifreli DNS sağlayıcısı (yalnızca siz açarsanız)
 
 ## 5. GitHub
@@ -33,7 +33,7 @@ Güncelleme denetimlerinde Marmara, en son sürümü öğrenmek için GitHub’a
 
 ## 6. Lisans ve marka
 
-Marmara, Mozilla Public License 2.0 ile sunulur. Marmara adı ve logosu Fuzuli Initiative’e aittir ve ayrıca Marmara deposundaki TRADEMARK.md dosyasında yazılı kurallara tabidir. LibreWolf ve Firefox adları ve logoları kendi sahiplerine aittir.
+Marmara, Mozilla Public License 2.0 ile sunulur; kaynak kodu https://github.com/fuzuliorg/marmara adresindedir. Marmara Browser ve Marmara Tarayıcı adları ile logosu Fuzuli Initiative’e aittir ve ayrıca Marmara deposundaki TRADEMARK.md dosyasında yazılı kurallara tabidir. LibreWolf, Firefox, GNOME ve arama motorlarının adları ve logoları kendi sahiplerine aittir. Marmara’nın arayüz simgeleri GNOME Adwaita simge temasına dayanır (LGPL-3.0 ya da CC BY-SA 3.0); lisans metinleri uygulama paketindeki licenses klasöründedir.
 
 ## 7. Garanti reddi ve sorumluluğun sınırı
 
@@ -47,6 +47,6 @@ Bu koşulları güncelleyebiliriz. Önemli değişiklikler yeni bir sürümde ve
 
 Bu koşullar Türkiye Cumhuriyeti hukukuna tabidir.
 
-## 10. İletişim
+## 10. İletişim ve e-posta ile paylaşılan veriler
 
-Sorularınız için: marmara.browser@proton.me ya da GitHub sorun sayfasından iletişime geçebilirsiniz.
+Sorularınız için marmara.browser@proton.me adresine yazabilir ya da GitHub sorun sayfasından iletişime geçebilirsiniz. Bize e-posta gönderirseniz e-posta adresiniz, varsa adınız ve mesajınızın içeriği, veri sorumlusu sıfatıyla Fuzuli Initiative tarafından işlenir. Bu bilgiler yalnızca talebinizi yanıtlamak ve konuyu çözmek için kullanılır; pazarlama amacıyla kullanılmaz ve yasal zorunluluk dışında üçüncü kişilerle paylaşılmaz. E-postalar, e-posta hizmet sağlayıcımız Proton Mail’in (İsviçre) sunucularında tutulur. Konu sonuçlandıktan sonra yazışmalar en geç 3 ay içinde silinir; bir yasal yükümlülük ya da uyuşmazlık varsa, bunun gerektirdiği süre kadar saklanır. 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında verilerinize erişme, düzeltilmesini ya da silinmesini isteme haklarına sahipsiniz; bunun için aynı adrese yazabilirsiniz, talebinizi en geç 30 gün içinde sonuçlandırırız. GitHub’da yazdığınız içerikler GitHub’ın koşullarına tabidir.
