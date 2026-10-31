@@ -145,6 +145,7 @@ const minTextSizeBinding = {
 };
 
 const Accent = ChromeUtils.importESModule("resource:///modules/MarmaraAccent.sys.mjs");
+const { hslToHex, hexToHsl } = Accent;
 
 const { normalizeUrl } = ChromeUtils.importESModule("resource:///modules/MarmaraStartpage.sys.mjs");
 
@@ -1062,77 +1063,127 @@ class SettingsDialog {
     return row;
   }
 
-  /** Vurgu rengi: hazır renkler + "sistem" + kendi rengi (renk seçici) */
+  /**
+   * Vurgu rengi: sistem rengi, hazır renkler ve kendi rengi.
+   * Kendi rengi için sistemin renk seçicisi yerine Marmara'nın kendi seçicisi
+   * (renk tonu, doygunluk ve açıklık kaydırıcıları + onaltılık kutu) açılır.
+   */
   #paletteRow(spec) {
-    const grid = create(this.doc, "div", { className: "marmara-palette", attrs: { role: "radiogroup" } });
-    const swatch = (value, label) => {
-      const button = create(
-        this.doc,
-        "button",
-        {
-          className: "marmara-swatch",
-          attrs: { type: "button", role: "radio", "data-value": value, "aria-label": label, title: label },
-        },
-        create(this.doc, "span", { className: "marmara-swatch-top" }),
-        create(this.doc, "span", { className: "marmara-swatch-light" }),
-        create(this.doc, "span", { className: "marmara-swatch-mute" }),
-        create(this.doc, "img", { className: "marmara-swatch-check", attrs: { src: ICON("check"), alt: "" } })
-      );
+    const doc = this.doc;
+    const grid = create(doc, "div", { className: "marmara-palette", attrs: { role: "radiogroup" } });
+    const dot = (value, label) => {
+      const button = create(doc, "button", {
+        className: "marmara-dot",
+        attrs: { type: "button", role: "radio", "data-value": value, "aria-label": label, title: label },
+      }, create(doc, "img", { className: "marmara-dot-check", attrs: { src: ICON("check"), alt: "" } }));
       if (value) {
-        button.style.setProperty("--swatch", value);
-      } else {
-        button.classList.add("system");
+        button.style.setProperty("--dot", value);
       }
       return button;
     };
+
+    // ---- Kendi rengi seçicisi ----
+    const slider = (key, max) =>
+      create(doc, "input", { className: `marmara-slider ${key}`, attrs: { type: "range", min: "0", max: String(max), step: "1" } });
+    const hue = slider("hue", 359);
+    const sat = slider("sat", 100);
+    const light = slider("light", 100);
+    const hex = create(doc, "input", {
+      className: "marmara-settings-input marmara-picker-hex",
+      attrs: { type: "text", spellcheck: "false", autocomplete: "off", maxlength: "7", placeholder: "#3584e4" },
+    });
+    const preview = create(doc, "span", { className: "marmara-picker-preview" });
+    const field = (key, control) =>
+      create(doc, "label", { className: "marmara-picker-field" }, create(doc, "span", { l10n: id(`picker-${key}`) }), control);
+    const picker = create(doc, "div", { className: "marmara-picker", attrs: { hidden: "" } },
+      create(doc, "div", { className: "marmara-picker-head" }, preview, hex),
+      field("hue", hue), field("sat", sat), field("light", light));
+
+    const paint = ([h, sa, l]) => {
+      hue.value = h;
+      sat.value = sa;
+      light.value = l;
+      const color = hslToHex(h, sa, l);
+      preview.style.backgroundColor = color;
+      picker.style.setProperty("--h", h);
+      picker.style.setProperty("--s", `${sa}%`);
+      picker.style.setProperty("--l", `${l}%`);
+      return color;
+    };
+    const fromSliders = () => {
+      const color = paint([+hue.value, +sat.value, +light.value]);
+      hex.value = color;
+      hex.removeAttribute("aria-invalid");
+      Accent.setAccent(color);
+      sync();
+    };
+    for (const control of [hue, sat, light]) {
+      control.addEventListener("input", fromSliders);
+    }
+    hex.addEventListener("change", () => {
+      const value = hex.value.trim().replace(/^(?!#)/, "#");
+      if (!/^#[0-9a-f]{6}$/i.test(value)) {
+        hex.setAttribute("aria-invalid", "true");
+        return;
+      }
+      hex.value = value.toLowerCase();
+      hex.removeAttribute("aria-invalid");
+      paint(hexToHsl(value));
+      Accent.setAccent(value);
+      sync();
+    });
+
     const sync = () => {
       const current = Accent.getAccent();
       const preset = Accent.PRESETS.includes(current);
-      for (const button of grid.querySelectorAll(".marmara-swatch")) {
-        const value = button.dataset.value;
-        button.setAttribute("aria-checked", String(value == current || (button.classList.contains("custom") && !!current && !preset)));
+      for (const button of grid.querySelectorAll(".marmara-dot")) {
+        const isCustom = button.classList.contains("custom");
+        button.setAttribute("aria-checked", String(isCustom ? !!current && !preset : button.dataset.value == current));
       }
-      custom.style.setProperty("--swatch", current && !preset ? current : "transparent");
-    };
-    const pick = value => {
-      Accent.setAccent(value);
-      sync();
+      custom.style.setProperty("--dot", current && !preset ? current : "transparent");
     };
 
-    const system = swatch("", "Sistem");
+    const system = dot("", "");
+    system.classList.add("system");
     system.setAttribute("data-l10n-id", id("accent-system"));
-    system.addEventListener("click", () => pick(""));
+    system.addEventListener("click", () => {
+      Accent.setAccent("");
+      sync();
+    });
     grid.append(system);
-    for (const hex of Accent.PRESETS) {
-      const button = swatch(hex, hex);
-      button.addEventListener("click", () => pick(hex));
+    for (const color of Accent.PRESETS) {
+      const button = dot(color, color);
+      button.addEventListener("click", () => {
+        Accent.setAccent(color);
+        paint(hexToHsl(color));
+        hex.value = color;
+        sync();
+      });
       grid.append(button);
     }
-
-    // Kendi rengi: GTK renk seçicisini açar
-    const input = create(this.doc, "input", { className: "marmara-palette-input", attrs: { type: "color", tabindex: "-1", "aria-hidden": "true" } });
-    input.value = Accent.getAccent() || "#3584e4";
-    const custom = create(
-      this.doc,
-      "button",
-      { className: "marmara-swatch custom", attrs: { type: "button", role: "radio", "data-value": "" } },
-      create(this.doc, "img", { className: "marmara-swatch-pick", attrs: { src: ICON("edit-outline"), alt: "" } }),
-      create(this.doc, "img", { className: "marmara-swatch-check", attrs: { src: ICON("check"), alt: "" } }),
-      input
-    );
+    const custom = dot("", "");
+    custom.classList.add("custom");
     custom.setAttribute("data-l10n-id", id("accent-custom"));
-    custom.addEventListener("click", event => {
-      if (event.target != input) {
-        input.click();
+    custom.prepend(create(doc, "img", { className: "marmara-dot-pick", attrs: { src: ICON("edit-outline"), alt: "" } }));
+    custom.addEventListener("click", () => {
+      picker.hidden = !picker.hidden;
+      if (!picker.hidden && !Accent.getAccent()) {
+        // Açılınca mevcut renk neyse seçici onu gösterir
+        const start = hex.value || "#3584e4";
+        paint(hexToHsl(start));
+        hex.value = start;
       }
     });
-    input.addEventListener("input", () => pick(input.value));
     grid.append(custom);
+
+    const start = Accent.getAccent() || "#3584e4";
+    hex.value = start;
+    paint(hexToHsl(start));
     sync();
 
     const row = this.#row(spec);
     row.classList.add("marmara-palette-row");
-    row.append(grid);
+    row.append(grid, picker);
     return row;
   }
 

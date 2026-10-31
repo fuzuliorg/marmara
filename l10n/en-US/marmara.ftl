@@ -465,3 +465,6 @@ marmara-settings-accent-system =
 marmara-settings-accent-custom =
     .aria-label = Pick your own color
     .title = Pick your own color
+marmara-settings-picker-hue = Hue
+marmara-settings-picker-sat = Saturation
+marmara-settings-picker-light = Lightness

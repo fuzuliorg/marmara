@@ -20,19 +20,55 @@ const PREF = "marmara.ui.accent";
 
 // Hazır renkler (Ayarlar'daki palet sırasıyla)
 export const PRESETS = [
-  "#3584e4", // mavi
-  "#2190a4", // gök mavisi
-  "#26a269", // yeşil
-  "#7c9a3a", // zeytin
-  "#c9a227", // sarı
-  "#e66100", // turuncu
-  "#986a44", // kahve
-  "#e01b24", // kırmızı
-  "#d56199", // pembe
-  "#9141ac", // mor
-  "#6f5fc9", // mor-mavi
-  "#5e7a91", // arduvaz
+  "#2b6cb0", // deniz
+  "#0e9aa7", // turkuaz
+  "#2f9e6e", // yosun
+  "#8aa62b", // fıstık
+  "#d9a521", // safran
+  "#ee7d2a", // mercan
+  "#c4472f", // kiremit
+  "#d6336c", // gül
+  "#a24bb5", // erguvan
+  "#5b57d1", // mor-mavi
+  "#7a5c47", // kahve
+  "#52667a", // taş
 ];
+
+/** h: 0-359, s ve l: 0-100 → "#rrggbb" */
+export function hslToHex(h, s, l) {
+  s /= 100;
+  l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return "#" + [f(0), f(8), f(4)].map(v => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
+}
+
+/** "#rrggbb" → [h, s, l] */
+export function hexToHsl(hex) {
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let h = 0;
+  let s = 0;
+  if (d) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max == r) {
+      h = ((g - b) / d) % 6;
+    } else if (max == g) {
+      h = (b - r) / d + 2;
+    } else {
+      h = (r - g) / d + 4;
+    }
+    h = Math.round(h * 60);
+    if (h < 0) {
+      h += 360;
+    }
+  }
+  return [h % 360, Math.round(s * 100), Math.round(l * 100)];
+}
 
 const HEX = /^#[0-9a-f]{6}$/i;
 

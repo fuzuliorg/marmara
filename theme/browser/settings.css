@@ -578,91 +578,141 @@ dialog.marmara-downloads-dialog {
 .marmara-palette-row {
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 12px;
 }
 
 .marmara-palette {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 64px);
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.marmara-swatch {
+/* Yuvarlak, çapraz iki tonlu damla: seçilen renk ve açık tonu */
+.marmara-dot {
   position: relative;
   display: grid;
-  grid-template: "top top" 1fr "light mute" 1fr / 1fr 1fr;
-  gap: 0;
-  width: 64px;
-  height: 64px;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  border: 3px solid color-mix(in srgb, currentColor 14%, transparent);
-  border-radius: 16px;
-  background: color-mix(in srgb, currentColor 8%, transparent);
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--dot) 0 55%, color-mix(in oklab, var(--dot) 45%, white) 55% 100%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 6 / 0.25);
   cursor: pointer;
+  transition: transform 120ms ease-out;
 
-  &:hover { border-color: color-mix(in srgb, currentColor 30%, transparent); }
-  &:focus-visible { outline: 2px solid var(--mm-set-accent); outline-offset: 2px; }
-  &[aria-checked="true"] { border-color: var(--mm-set-accent); }
-
-  > .marmara-swatch-top {
-    grid-area: top;
-    background: color-mix(in oklab, var(--swatch) 38%, #1d1d20);
-  }
-  > .marmara-swatch-light {
-    grid-area: light;
-    background: color-mix(in oklab, var(--swatch) 38%, white);
-  }
-  > .marmara-swatch-mute {
-    grid-area: mute;
-    background: color-mix(in oklab, var(--swatch) 22%, #8a8a90);
+  &:hover { transform: scale(1.1); }
+  &:focus-visible { outline: 2px solid var(--mm-set-accent); outline-offset: 3px; }
+  &[aria-checked="true"] {
+    outline: 2px solid var(--mm-set-accent);
+    outline-offset: 3px;
   }
 
-  /* Sistem rengi: nötr gri */
+  /* Sistem rengi: yarısı açık, yarısı koyu */
   &.system {
-    --swatch: #8a8a90;
+    background: linear-gradient(135deg, #c8c8cc 0 50%, #4a4a50 50% 100%);
   }
+  /* Kendi rengi: kesikli halka */
   &.custom {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in oklab, var(--swatch, transparent) 40%, color-mix(in srgb, currentColor 6%, transparent));
+    background: var(--dot, transparent);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 35%, transparent);
+    border-radius: 12px;
   }
 }
 
-.marmara-swatch-pick {
-  width: 20px;
-  height: 20px;
+.marmara-dot-pick {
+  width: 16px;
+  height: 16px;
   -moz-context-properties: fill;
   fill: currentColor;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
-.marmara-swatch-check {
+.marmara-dot-check {
   position: absolute;
-  inset-block-end: 3px;
-  inset-inline-end: 3px;
-  box-sizing: border-box;
-  width: 20px;
-  height: 20px;
-  padding: 3px;
-  border-radius: 50%;
-  background-color: var(--mm-set-accent);
+  inset: 0;
+  margin: auto;
+  width: 16px;
+  height: 16px;
   -moz-context-properties: fill;
-  fill: var(--mm-accent-fg, white);
+  fill: #ffffff;
+  filter: drop-shadow(0 0 2px rgb(0 0 6 / 0.7));
   visibility: hidden;
 }
 
-.marmara-swatch[aria-checked="true"] > .marmara-swatch-check {
+.marmara-dot[aria-checked="true"] > .marmara-dot-check {
   visibility: visible;
 }
 
-.marmara-palette-input {
-  position: absolute;
-  inset: 0;
+/* Kendi rengi seçicisi */
+.marmara-picker {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background-color: color-mix(in srgb, currentColor 6%, transparent);
+
+  &[hidden] { display: none; }
+}
+
+.marmara-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marmara-picker-preview {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 6 / 0.25);
+}
+
+.marmara-picker-hex {
+  width: 110px;
+  font-family: monospace;
+}
+
+.marmara-picker-field {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9em;
+}
+
+.marmara-slider {
+  appearance: none;
   width: 100%;
-  height: 100%;
-  opacity: 0;
-  pointer-events: none;
+  height: 12px;
+  margin: 0;
+  border-radius: 6px;
+  background: var(--track);
+  outline-offset: 3px;
+
+  &::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 18px;
+    height: 18px;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0 0 1px rgb(0 0 6 / 0.4), 0 1px 3px rgb(0 0 6 / 0.4);
+  }
+  &::-moz-range-track { background: transparent; }
+
+  &.hue {
+    --track: linear-gradient(to right, hsl(0 var(--s) 50%), hsl(60 var(--s) 50%), hsl(120 var(--s) 50%), hsl(180 var(--s) 50%), hsl(240 var(--s) 50%), hsl(300 var(--s) 50%), hsl(359 var(--s) 50%));
+  }
+  &.sat {
+    --track: linear-gradient(to right, hsl(var(--h) 0% var(--l)), hsl(var(--h) 100% var(--l)));
+  }
+  &.light {
+    --track: linear-gradient(to right, hsl(var(--h) var(--s) 0%), hsl(var(--h) var(--s) 50%), hsl(var(--h) var(--s) 100%));
+  }
 }

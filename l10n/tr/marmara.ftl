@@ -465,3 +465,6 @@ marmara-settings-accent-system =
 marmara-settings-accent-custom =
     .aria-label = Kendi rengini seç
     .title = Kendi rengini seç
+marmara-settings-picker-hue = Renk tonu
+marmara-settings-picker-sat = Doygunluk
+marmara-settings-picker-light = Açıklık
