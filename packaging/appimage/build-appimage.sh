@@ -62,8 +62,10 @@ fi
 OUT="$OUTDIR/Marmara-$VERSION-x86_64.AppImage"
 rm -f "$OUT" "$OUT.zsync"
 # Güncelleme bilgisi: AppImageUpdate gibi araçlar en son release'i izler
-ARCH=x86_64 "$TOOL" --appimage-extract-and-run --no-appstream \
+# appimagetool .zsync dosyasını çalıştığı klasöre yazar; dist/ içinde çalıştırıp orada tutarız
+(cd "$OUTDIR" && ARCH=x86_64 "$TOOL" --appimage-extract-and-run --no-appstream \
   -u "gh-releases-zsync|fuzuliorg|marmara|latest|Marmara-*-x86_64.AppImage.zsync" \
-  "$APPDIR" "$OUT"
+  "$APPDIR" "$(basename "$OUT")")
+[ -f "$OUT.zsync" ] || { echo "zsync dosyası üretilmedi" >&2; exit 1; }
 chmod +x "$OUT"
 echo "  $OUT"
