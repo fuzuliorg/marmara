@@ -716,3 +716,58 @@ dialog.marmara-downloads-dialog {
     --track: linear-gradient(to right, hsl(var(--h) var(--s) 0%), hsl(var(--h) var(--s) 50%), hsl(var(--h) var(--s) 100%));
   }
 }
+
+/* ---- Parolalar paneli şifresi (Ayarlar > Parolalar ve formlar) ---- */
+.marmara-lock-form {
+  display: block;
+  padding-block: 14px;
+
+  &[hidden] { display: none; }
+}
+
+.marmara-lock-fields {
+  display: grid;
+  gap: 10px;
+
+  > h3 { margin: 0 0 2px; font-size: 1em; }
+}
+
+.marmara-lock-field {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9em;
+}
+
+.marmara-lock-warning {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--mm-warning, #c88800) 18%, transparent);
+  font-size: 0.9em;
+  line-height: 1.45;
+}
+
+.marmara-lock-ack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.marmara-lock-error {
+  margin: 0;
+  color: var(--mm-destructive, #c01c28);
+  font-size: 0.9em;
+
+  &[hidden] { display: none; }
+}
+
+.marmara-lock-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

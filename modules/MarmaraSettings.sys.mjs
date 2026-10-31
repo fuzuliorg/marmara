@@ -783,6 +783,7 @@ const PAGES = [
     id: "passwords",
     icon: "passwords",
     groups: [
+      { k: "lock", rows: [{ type: "lock", k: "lock", sub: true }] },
       {
         k: "passwords",
         rows: [
@@ -1187,6 +1188,130 @@ class SettingsDialog {
     return row;
   }
 
+  /**
+   * Parolalar paneli şifresi: aç/kapa + değiştir. Açmak için şifre belirlenir (unutulmaması
+   * için uyarı ve onay kutusuyla); kapatmak ve değiştirmek için mevcut şifre istenir.
+   */
+  #lockRows(spec) {
+    const doc = this.doc;
+    const lock = ChromeUtils.importESModule("resource:///modules/MarmaraPasswordLock.sys.mjs");
+    const t = key => id(`lock-${key}`);
+
+    const toggle = create(doc, "button", {
+      className: "marmara-switch",
+      attrs: { type: "button", role: "switch", "aria-checked": String(lock.isEnabled()) },
+    }, create(doc, "span", { className: "marmara-switch-knob" }));
+    const row = this.#row(spec, toggle);
+    row.classList.add("clickable");
+
+    const changeButton = create(doc, "button", { className: "marmara-settings-pill", l10n: t("change"), attrs: { type: "button" } });
+    const changeRow = create(doc, "div", { className: "marmara-settings-row" },
+      create(doc, "div", { className: "marmara-settings-labels" }, create(doc, "span", { className: "marmara-settings-title", l10n: t("change-title") })),
+      changeButton);
+
+    const formRow = create(doc, "div", { className: "marmara-settings-row marmara-lock-form", attrs: { hidden: "" } });
+
+    const input = key => create(doc, "input", { className: "marmara-settings-input", attrs: { type: "password", autocomplete: "off", spellcheck: "false", "data-key": key } });
+    const field = (key, control) => create(doc, "label", { className: "marmara-lock-field" }, create(doc, "span", { l10n: t(key) }), control);
+
+    let mode = null;
+    const sync = () => {
+      const enabled = lock.isEnabled();
+      toggle.setAttribute("aria-checked", String(enabled));
+      changeRow.hidden = !enabled;
+    };
+    const close = () => {
+      mode = null;
+      formRow.hidden = true;
+      formRow.replaceChildren();
+    };
+
+    const open = next => {
+      mode = next;
+      const cur = input("current");
+      const neu = input("new");
+      const rep = input("repeat");
+      const ack = create(doc, "input", { attrs: { type: "checkbox" } });
+      const error = create(doc, "p", { className: "marmara-lock-error", attrs: { role: "alert", hidden: "" } });
+      const submit = create(doc, "button", { className: "marmara-settings-pill suggested", l10n: t(`confirm-${next}`), attrs: { type: "submit" } });
+      const cancel = create(doc, "button", { className: "marmara-settings-pill", l10n: t("cancel"), attrs: { type: "button" } });
+      const fields = [];
+      if (next != "enable") {
+        fields.push(field("current", cur));
+      }
+      if (next != "disable") {
+        fields.push(field("new", neu), field("repeat", rep));
+      }
+      const warning =
+        next == "disable"
+          ? null
+          : create(doc, "div", { className: "marmara-lock-warning", attrs: { role: "note" } },
+              create(doc, "strong", { l10n: t("warning-title") }),
+              create(doc, "span", { l10n: t("warning") }),
+              create(doc, "label", { className: "marmara-lock-ack" }, ack, create(doc, "span", { l10n: t("ack") })));
+      const form = create(doc, "form", { className: "marmara-lock-fields", attrs: { novalidate: "" } },
+        create(doc, "h3", { l10n: t(`title-${next}`) }),
+        ...fields, warning, error,
+        create(doc, "div", { className: "marmara-lock-buttons" }, cancel, submit));
+      const fail = key => {
+        error.setAttribute("data-l10n-id", t(`err-${key}`));
+        error.hidden = false;
+        doc.l10n.translateFragment(error);
+        submit.disabled = false;
+      };
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        submit.disabled = true;
+        error.hidden = true;
+        try {
+          if (next != "enable" && !(await lock.verify(cur.value))) {
+            await new Promise(resolve => this.win.setTimeout(resolve, 700));
+            fail("wrong");
+            return;
+          }
+          if (next != "disable") {
+            if (neu.value.length < lock.MIN_LENGTH) {
+              fail("short");
+              return;
+            }
+            if (neu.value != rep.value) {
+              fail("mismatch");
+              return;
+            }
+            if (!ack.checked) {
+              fail("ack");
+              return;
+            }
+            await lock.set(neu.value);
+          } else {
+            lock.clear();
+          }
+          close();
+          sync();
+        } catch (e) {
+          console.error("Marmara parola şifresi:", e);
+          fail("generic");
+        }
+      });
+      cancel.addEventListener("click", close);
+      formRow.replaceChildren(form);
+      formRow.hidden = false;
+      doc.l10n.translateFragment(formRow);
+      form.querySelector("input")?.focus();
+    };
+
+    const flip = () => open(lock.isEnabled() ? "disable" : "enable");
+    row.addEventListener("click", event => {
+      if (event.target != toggle && !toggle.contains(event.target)) {
+        flip();
+      }
+    });
+    toggle.addEventListener("click", flip);
+    changeButton.addEventListener("click", () => open("change"));
+    sync();
+    return [row, changeRow, formRow];
+  }
+
   #segmentsRow(spec) {
     const strip = create(this.doc, "div", { className: "marmara-settings-segments", attrs: { role: "radiogroup" } });
     const sync = () => {
@@ -1584,6 +1709,8 @@ class SettingsDialog {
         return [this.#segmentsRow(spec)];
       case "palette":
         return [this.#paletteRow(spec)];
+      case "lock":
+        return this.#lockRows(spec);
       case "text":
         return [this.#textRow(spec)];
       case "engine":

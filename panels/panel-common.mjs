@@ -11,6 +11,15 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+// Vurgu rengi: panel ayrı bir belge olduğu için seçilen rengi kendisi uygular ve izler
+try {
+  const Accent = ChromeUtils.importESModule("resource:///modules/MarmaraAccent.sys.mjs");
+  Accent.apply(window);
+  Accent.watch(window);
+} catch (e) {
+  console.error("Marmara panel (vurgu rengi):", e);
+}
+
 const ICONS = {
   close: "chrome://global/skin/icons/close.svg",
   search: "chrome://global/skin/icons/search-glass.svg",

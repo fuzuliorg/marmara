@@ -1059,11 +1059,12 @@ MODULES = [
     ("MarmaraWelcome.sys.mjs", "browser-window-delayed-startup", "MarmaraWelcome.initWindow"),
     ("MarmaraExtensions.sys.mjs", "browser-window-delayed-startup", "MarmaraExtensions.initWindow"),
     ("MarmaraAccent.sys.mjs", "browser-window-delayed-startup", "MarmaraAccent.initWindow"),
+    ("MarmaraSidebar.sys.mjs", "browser-window-delayed-startup", "MarmaraSidebar.initWindow"),
     ("MarmaraDownloads.sys.mjs", "browser-window-delayed-startup", "MarmaraDownloads.initWindow"),
     ("MarmaraStartpage.sys.mjs", "browser-before-ui-startup", "MarmaraStartpage.init"),
 ]
 # Kategoriye bağlanmayan, kullanılırken içe aktarılan modüller
-ON_DEMAND_MODULES = ["MarmaraAbout.sys.mjs", "MarmaraSettings.sys.mjs"]
+ON_DEMAND_MODULES = ["MarmaraAbout.sys.mjs", "MarmaraSettings.sys.mjs", "MarmaraPasswordLock.sys.mjs"]
 
 
 def install_modules(browser: pathlib.Path) -> None:

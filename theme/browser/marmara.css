@@ -8,7 +8,6 @@
  *   shape.css      Boyut ve köşe yarıçapları. Bu da token'larla yapılır.
  *   headerbar.css  GNOME Web düzeni: adres çubuğu üstte, sekmeler altta.
  *   tabs.css       AdwTabBar görünümü.
- *   accent.css     Vurgu rengi kişiselleştirmesi (renk yokken etkisiz).
  *   slim.css       "İnce" görünüm (az boşluk); Klasik görünümde etkisiz.
  *   content.css    Web içeriği kenardan kenara, yuvarlak köşe yok.
  *   tosdr.css      Adres çubuğundaki ToS;DR notu ve ayrıntı paneli.
@@ -28,7 +27,6 @@
 @import url("chrome://browser/skin/marmara/headerbar.css");
 @import url("chrome://browser/skin/marmara/tabs.css");
 @import url("chrome://browser/skin/marmara/slim.css");
-@import url("chrome://browser/skin/marmara/accent.css");
 @import url("chrome://browser/skin/marmara/content.css");
 @import url("chrome://browser/skin/marmara/tosdr.css");
 @import url("chrome://browser/skin/marmara/sitepanel.css");

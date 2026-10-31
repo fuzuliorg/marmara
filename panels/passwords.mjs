@@ -15,6 +15,7 @@
 import {
   buildShell,
   chunkedRender,
+  closePanel,
   confirmDialog,
   debounce,
   emptyState,
@@ -328,4 +329,60 @@ function init() {
   render();
 }
 
-init();
+function showLock(lock) {
+  const close = iconButton({ icon: "close", l10n: "marmara-panel-close", onClick: closePanel });
+  const header = h("header", { class: "mm-header" }, h("span"), h("h1", { l10n: "marmara-panel-passwords-title" }), close);
+  const input = h("input", {
+    type: "password",
+    autocomplete: "off",
+    spellcheck: "false",
+    l10n: "marmara-panel-lock-input",
+    "data-l10n-attrs": "placeholder, aria-label",
+  });
+  const error = h("p", { class: "mm-error", role: "alert", hidden: true, l10n: "marmara-panel-lock-wrong" });
+  const unlock = h("button", { class: "mm-pill suggested", type: "submit", l10n: "marmara-panel-lock-unlock" });
+  const form = h("form", { class: "mm-lock-form", novalidate: true }, input, error, unlock);
+  const screen = h("main", { class: "mm-lock" },
+    icon("login"),
+    h("h2", { l10n: "marmara-panel-lock-title" }),
+    h("p", { l10n: "marmara-panel-lock-sub" }),
+    form);
+  document.body.append(header, screen);
+  translate(document.body);
+  input.focus();
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    unlock.disabled = true;
+    let ok = false;
+    try {
+      ok = await lock.verify(input.value);
+    } catch (e) {
+      console.error("Marmara parolalar (şifre):", e);
+    }
+    if (ok) {
+      header.remove();
+      screen.remove();
+      init();
+      return;
+    }
+    // Art arda denemeyi yavaşlat
+    await new Promise(resolve => setTimeout(resolve, 700));
+    error.hidden = false;
+    input.value = "";
+    input.focus();
+    unlock.disabled = false;
+  });
+}
+
+// Şifre açıksa (Ayarlar > Parolalar) önce kilit ekranı gösterilir
+let lock = null;
+try {
+  lock = ChromeUtils.importESModule("resource:///modules/MarmaraPasswordLock.sys.mjs");
+} catch (e) {
+  console.error("Marmara parolalar (şifre modülü):", e);
+}
+if (lock?.isEnabled() && !globalThis.marmaraPanelBackend) {
+  showLock(lock);
+} else {
+  init();
+}

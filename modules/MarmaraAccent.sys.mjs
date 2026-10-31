@@ -122,6 +122,13 @@ export function applyAll() {
   }
 }
 
+/** Panel gibi ayrı belgeler için: tercih değişince bu belgeyi de günceller */
+export function watch(win) {
+  const observer = { observe: () => apply(win) };
+  Services.prefs.addObserver(PREF, observer);
+  win.addEventListener("unload", () => Services.prefs.removeObserver(PREF, observer), { once: true });
+}
+
 export const MarmaraAccent = {
   /** browser-window-delayed-startup */
   initWindow(win) {
