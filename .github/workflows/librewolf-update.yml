@@ -157,3 +157,32 @@ jobs:
           cp setup/Marmara-Setup.exe "Marmara-$v-windows-x86_64-setup.exe"
           gh release upload "v$v" "marmara-$v-windows-x86_64.zip" "Marmara-$v-windows-x86_64-setup.exe" \
             --repo "$GITHUB_REPOSITORY" --clobber
+
+  # AppImage: yayımlanan Linux arşivinden tek dosyalık paket (ayrıntı packaging/appimage/).
+  # Başarısız olursa diğer sürüm dosyaları etkilenmez.
+  appimage:
+    needs: update
+    if: needs.update.outputs.released == 'true'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MARMARA_VERSION: ${{ needs.update.outputs.marmara }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gerekli araçlar
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends zsync xz-utils
+
+      - name: Linux arşivini indir
+        run: gh release download "v$MARMARA_VERSION" --pattern 'marmara-*-linux-x86_64.tar.xz' --dir dist --repo "$GITHUB_REPOSITORY"
+
+      - name: AppImage derle
+        run: packaging/appimage/build-appimage.sh dist/marmara-*-linux-x86_64.tar.xz
+
+      - name: Release'e ekle
+        run: |
+          gh release upload "v$MARMARA_VERSION" \
+            "dist/Marmara-$MARMARA_VERSION-x86_64.AppImage" \
+            "dist/Marmara-$MARMARA_VERSION-x86_64.AppImage.zsync" \
+            --repo "$GITHUB_REPOSITORY" --clobber

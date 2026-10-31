@@ -68,6 +68,17 @@ Depo imzalıdır. Anahtar `marmara.flatpakrepo` dosyasında bulunur.
 > Marmara henüz Flathub'da değil, bu yüzden Bazaar gibi yazılım merkezleri onu
 > listelemez. GNOME Yazılım ve yukarıdaki komutlar çalışır.
 
+### AppImage (Linux)
+
+[Son sürümden](https://github.com/fuzuliorg/marmara/releases/latest) `Marmara-<sürüm>-x86_64.AppImage` dosyasını indirin, sonra:
+
+```sh
+chmod +x Marmara-*-x86_64.AppImage
+./Marmara-*-x86_64.AppImage
+```
+
+Sistemin GTK 3 kitaplığını kullanır ve profilinizi diğer sürümler gibi `~/.marmara` içinde tutar. Güncellemek için yeni AppImage'ı indirin (ya da AppImageUpdate gibi bir araç kullanın; güncelleme bilgisi dosyanın içinde gömülüdür).
+
 ### Windows
 
 [En son sürümden](https://github.com/fuzuliorg/marmara/releases/latest)

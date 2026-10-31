@@ -68,6 +68,17 @@ The repository is signed; the key is included in `marmara.flatpakrepo`.
 > Marmara is not on Flathub (yet), so software centers like Bazaar will not list it.
 > GNOME Software and the commands above work.
 
+### AppImage (Linux)
+
+Download `Marmara-<version>-x86_64.AppImage` from the [latest release](https://github.com/fuzuliorg/marmara/releases/latest), then:
+
+```sh
+chmod +x Marmara-*-x86_64.AppImage
+./Marmara-*-x86_64.AppImage
+```
+
+It uses your system's GTK 3 and keeps your profile in `~/.marmara`, like the other builds. To update, download the new AppImage (or use a tool such as AppImageUpdate; the update information is embedded).
+
 ### Windows
 
 Download `Marmara-<version>-windows-x86_64-setup.exe` from the
