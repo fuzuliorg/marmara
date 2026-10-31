@@ -381,7 +381,14 @@ async function fetchLatest(win) {
     sha256 && String(asset.browser_download_url).startsWith(`https://github.com/${GITHUB_PROJECT}/releases/download/`)
       ? { url: asset.browser_download_url, sha256 }
       : null;
-  return { version, url: `https://github.com/${GITHUB_PROJECT}/releases/latest`, installer };
+  // Linux'ta AppImage sürüme eklenmişse (ve sağlama toplamı varsa) uygulama içinden güncellenebilir
+  const imageAsset = (info.assets ?? []).find(a => /^Marmara-\d+(\.\d+)*-x86_64\.AppImage$/.test(a?.name ?? ""));
+  const imageSha = /^sha256:([0-9a-f]{64})$/.exec(imageAsset?.digest ?? "")?.[1];
+  const appImage =
+    imageSha && String(imageAsset.browser_download_url).startsWith(`https://github.com/${GITHUB_PROJECT}/releases/download/`)
+      ? { url: imageAsset.browser_download_url, sha256: imageSha }
+      : null;
+  return { version, url: `https://github.com/${GITHUB_PROJECT}/releases/latest`, installer, appImage };
 }
 
 /**
@@ -403,6 +410,77 @@ function canSelfUpdate() {
   }
 }
 
+/** Dosyanın SHA-256 değeri (küçük harf onaltılık) */
+function fileSha256(path) {
+  const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  file.initWithPath(path);
+  const stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+  stream.init(file, -1, 0, 0);
+  try {
+    const hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+    hash.init(hash.SHA256);
+    hash.updateFromStream(stream, 0xffffffff);
+    return Array.from(hash.finish(false), c => c.charCodeAt(0).toString(16).padStart(2, "0")).join("");
+  } finally {
+    stream.close();
+  }
+}
+
+/**
+ * AppImage olarak çalışıyorsak AppImage dosyasının yolu (APPIMAGE ortam değişkeni),
+ * değilse ya da dosyanın bulunduğu klasöre yazılamıyorsa null.
+ */
+function appImagePath() {
+  if (AppConstants.platform != "linux") {
+    return null;
+  }
+  try {
+    const path = Services.env.get("APPIMAGE");
+    if (!path) {
+      return null;
+    }
+    const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    file.initWithPath(path);
+    return file.exists() && file.isFile() && file.parent.isWritable() ? path : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Yeni AppImage'ı eskisinin yanına indirir, sağlama toplamını doğrular ve eskisinin
+ * üzerine atomik olarak taşır (çalışan kopya etkilenmez; dosya adı ve yolu korunur,
+ * böylece kısayollar bozulmaz).
+ */
+async function downloadAppImage(appImage, target, onProgress) {
+  const { Downloads } = ChromeUtils.importESModule("resource://gre/modules/Downloads.sys.mjs");
+  // Aynı klasörde (aynı dosya sistemi): taşıma anlık ve bölünmez olur
+  const temp = `${target}.marmara-update-${Services.uuid.generateUUID().toString().slice(1, -1)}`;
+  try {
+    const download = await Downloads.createDownload({ source: { url: appImage.url, isPrivate: true }, target: temp });
+    download.onchange = () => onProgress(download.progress / 100);
+    await download.start();
+    if (fileSha256(temp) != appImage.sha256) {
+      throw new Error("sağlama toplamı uyuşmuyor");
+    }
+    await IOUtils.setPermissions(temp, 0o755);
+    await IOUtils.move(temp, target);
+  } catch (e) {
+    await IOUtils.remove(temp, { ignoreAbsent: true });
+    throw e;
+  }
+}
+
+/** Çalışan kopya kapanınca yeni AppImage'ı açar (hemen açılsaydı çalışan kopyaya devrolurdu) */
+function relaunchAppImageAndQuit(path) {
+  const sh = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  sh.initWithPath("/bin/sh");
+  const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+  process.init(sh);
+  process.runw(false, ["-c", 'sleep 3; exec "$0"', path], 3);
+  Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
+}
+
 /** Kurulum sihirbazını indirir (onProgress(0..1)), sağlama toplamını doğrular, dosya yolunu döndürür */
 async function downloadInstaller(installer, onProgress) {
   const { Downloads } = ChromeUtils.importESModule("resource://gre/modules/Downloads.sys.mjs");
@@ -417,21 +495,9 @@ async function downloadInstaller(installer, onProgress) {
   download.onchange = () => onProgress(download.progress / 100);
   await download.start();
 
-  {
-    const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    file.initWithPath(target);
-    const stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-    stream.init(file, -1, 0, 0);
-    const hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
-    hash.init(hash.SHA256);
-    hash.updateFromStream(stream, 0xffffffff);
-    const raw = hash.finish(false);
-    stream.close();
-    const hex = Array.from(raw, c => c.charCodeAt(0).toString(16).padStart(2, "0")).join("");
-    if (hex != installer.sha256) {
-      await IOUtils.remove(target, { ignoreAbsent: true });
-      throw new Error("sağlama toplamı uyuşmuyor");
-    }
+  if (fileSha256(target) != installer.sha256) {
+    await IOUtils.remove(target, { ignoreAbsent: true });
+    throw new Error("sağlama toplamı uyuşmuyor");
   }
   return target;
 }
@@ -980,6 +1046,7 @@ class SettingsDialog {
 
     let downloadUrl = null;
     let installer = null;
+    let appImage = null;
     let availableVersion = null;
     const setState = (state, args = {}) => {
       status.setAttribute("data-l10n-id", id(`update-${state}`));
@@ -989,7 +1056,8 @@ class SettingsDialog {
         status.setAttribute("data-l10n-id", id("update-available-flatpak"));
         status.setAttribute("data-l10n-args", JSON.stringify({ ...args, command: FLATPAK_UPDATE_COMMAND }));
       }
-      const download = flatpak ? "update-copy-command" : installer && canSelfUpdate() ? "update-install" : "update-download";
+      const selfUpdate = (installer && canSelfUpdate()) || (appImage && appImagePath());
+      const download = flatpak ? "update-copy-command" : selfUpdate ? "update-install" : "update-download";
       button.setAttribute("data-l10n-id", id(state == "available" ? download : "update-check"));
       button.classList.toggle("suggested", state == "available");
       button.disabled = state == "checking";
@@ -1006,6 +1074,30 @@ class SettingsDialog {
           } else {
             this.win.openTrustedLinkIn(downloadUrl, "tab");
             this.close();
+          }
+          return;
+        }
+        const imagePath = appImage && appImagePath();
+        if (imagePath) {
+          button.disabled = true;
+          status.setAttribute("data-l10n-id", id("update-downloading"));
+          status.setAttribute("data-l10n-args", JSON.stringify({ percent: 0 }));
+          this.doc.l10n.translateFragment(row);
+          try {
+            await downloadAppImage(appImage, imagePath, fraction => {
+              status.setAttribute("data-l10n-args", JSON.stringify({ percent: Math.round(fraction * 100) }));
+              this.doc.l10n.translateFragment(status);
+            });
+            status.setAttribute("data-l10n-id", id("update-installing"));
+            this.doc.l10n.translateFragment(status);
+            relaunchAppImageAndQuit(imagePath);
+          } catch (e) {
+            console.error("Marmara AppImage güncelleme:", e);
+            // Olmazsa elle indirme sayfasına düşer
+            appImage = null;
+            button.disabled = false;
+            setState("available", { version: availableVersion });
+            this.win.openTrustedLinkIn(downloadUrl, "tab");
           }
           return;
         }
@@ -1042,6 +1134,7 @@ class SettingsDialog {
         if (isNewer(info.version, version)) {
           downloadUrl = info.url;
           installer = info.installer;
+          appImage = info.appImage;
           availableVersion = info.version;
           setState("available", { version: info.version });
         } else {
