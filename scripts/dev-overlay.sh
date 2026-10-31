@@ -8,7 +8,8 @@
 #               NO_CSS=1 ./scripts/dev-overlay.sh     (tema CSS'lerini atlar)
 # Çalıştırma: ./scripts/dev-run.sh   (Flatpak sandbox'ı içinde, temiz profille)
 #
-# Üstüne yazılanlar: theme/browser/*.css, panels/*, modules/*.sys.mjs, l10n/*/marmara.ftl
+# Üstüne yazılanlar: theme/browser/*.css, theme/global/tokens.css, panels/*, startpage/*, modules/*.sys.mjs
+# (ve scripts/patch_omni.py'deki MODULES kayıtları), l10n/*/marmara.ftl
 # ve Adwaita simgeleri (scripts/adwaita_icons.py). scripts/patch_omni.py'deki kod
 # yamaları (JS düzenlemeleri) buraya DAHİL DEĞİLDİR; onlar tam derlemede uygulanır.
 set -euo pipefail
@@ -46,6 +47,8 @@ echo "==> Değişiklikler uygulanıyor"
 SKIN="$TMP/b/chrome/browser/skin/classic/browser/marmara"
 [ -d "$SKIN" ] || { echo "HATA: bu Flatpak Marmara'nın temasını içermiyor." >&2; exit 1; }
 [ -n "${NO_CSS:-}" ] || cp "$ROOT"/theme/browser/*.css "$SKIN/"
+# Ortak renk paleti (vurgu rengi kuralları da burada)
+[ -n "${NO_CSS:-}" ] || cp "$ROOT/theme/global/tokens.css" "$TMP/g/chrome/toolkit/skin/classic/global/marmara/tokens.css"
 rm -rf "$TMP/b/chrome/browser/content/browser/marmara-panels"
 cp -r "$ROOT/panels" "$TMP/b/chrome/browser/content/browser/marmara-panels"
 if [ -d "$TMP/b/chrome/browser/content/browser/marmara" ]; then

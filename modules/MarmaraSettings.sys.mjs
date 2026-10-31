@@ -1218,7 +1218,12 @@ class SettingsDialog {
     const sync = () => {
       const enabled = lock.isEnabled();
       toggle.setAttribute("aria-checked", String(enabled));
-      changeRow.hidden = !enabled;
+      changeRow.hidden = lock.mode() != "custom";
+      // Bilgisayar şifresi kullanılabiliyorsa (ya da seçiliyse) açıklama ona göre
+      const system = lock.mode() == "system" || (!enabled && lock.systemKind() != null);
+      const sub = row.querySelector(".marmara-settings-sub");
+      sub?.setAttribute("data-l10n-id", t(system ? "sub-system" : "sub"));
+      doc.l10n.translateFragment(row);
     };
     const close = () => {
       mode = null;
@@ -1233,17 +1238,20 @@ class SettingsDialog {
       const rep = input("repeat");
       const ack = create(doc, "input", { attrs: { type: "checkbox" } });
       const error = create(doc, "p", { className: "marmara-lock-error", attrs: { role: "alert", hidden: "" } });
-      const submit = create(doc, "button", { className: "marmara-settings-pill suggested", l10n: t(`confirm-${next}`), attrs: { type: "submit" } });
+      const submit = create(doc, "button", { className: "marmara-settings-pill suggested", l10n: t(`confirm-${next.replace("-sys", "")}`), attrs: { type: "submit" } });
       const cancel = create(doc, "button", { className: "marmara-settings-pill", l10n: t("cancel"), attrs: { type: "button" } });
       const fields = [];
-      if (next != "enable") {
-        fields.push(field("current", cur));
+      const sys = next.endsWith("-sys");
+      const needsCurrent = next != "enable";
+      const needsNew = next == "enable" || next == "change";
+      if (needsCurrent) {
+        fields.push(field(sys ? "syspw" : "current", cur));
       }
-      if (next != "disable") {
+      if (needsNew) {
         fields.push(field("new", neu), field("repeat", rep));
       }
       const warning =
-        next == "disable"
+        !needsNew
           ? null
           : create(doc, "div", { className: "marmara-lock-warning", attrs: { role: "note" } },
               create(doc, "strong", { l10n: t("warning-title") }),
@@ -1264,12 +1272,13 @@ class SettingsDialog {
         submit.disabled = true;
         error.hidden = true;
         try {
-          if (next != "enable" && !(await lock.verify(cur.value))) {
+          const verifyCurrent = sys ? lock.verifySystemPassword : lock.verify;
+          if (needsCurrent && !(await verifyCurrent(cur.value))) {
             await new Promise(resolve => this.win.setTimeout(resolve, 700));
             fail("wrong");
             return;
           }
-          if (next != "disable") {
+          if (needsNew) {
             if (neu.value.length < lock.MIN_LENGTH) {
               fail("short");
               return;
@@ -1283,6 +1292,8 @@ class SettingsDialog {
               return;
             }
             await lock.set(neu.value);
+          } else if (next == "enable-sys") {
+            lock.enableSystem();
           } else {
             lock.clear();
           }
@@ -1300,7 +1311,40 @@ class SettingsDialog {
       form.querySelector("input")?.focus();
     };
 
-    const flip = () => open(lock.isEnabled() ? "disable" : "enable");
+    // Windows/macOS: işletim sisteminin kendi doğrulama penceresi
+    const askOs = async () => {
+      const reason = await doc.l10n.formatValue("marmara-panel-passwords-auth-reason");
+      const caption = await doc.l10n.formatValue("marmara-panel-passwords-auth-caption");
+      return lock.authenticateOs(reason, caption, this.win);
+    };
+    const flip = async () => {
+      const current = lock.mode();
+      const kind = lock.systemKind();
+      if (current == "custom") {
+        open("disable");
+      } else if (current == "system") {
+        if (kind == "os") {
+          if (await askOs()) {
+            lock.clear();
+            sync();
+          }
+        } else if (kind == "linux") {
+          open("disable-sys");
+        } else {
+          lock.clear(); // bu ortamda doğrulanamıyor; kullanıcı dışarıda kalmasın
+          sync();
+        }
+      } else if (kind == "os") {
+        if (await askOs()) {
+          lock.enableSystem();
+          sync();
+        }
+      } else if (kind == "linux") {
+        open("enable-sys");
+      } else {
+        open("enable");
+      }
+    };
     row.addEventListener("click", event => {
       if (event.target != toggle && !toggle.contains(event.target)) {
         flip();

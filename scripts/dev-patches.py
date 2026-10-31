@@ -90,3 +90,22 @@ print("  indirme başlayınca yan panel:", patch(
 """,
     'show("viewDownloadsSidebar")',
 ))
+
+
+# Kategoriye bağlanan modüller (patch_omni.py'deki MODULES): Flatpak'ta kayıtlı olmayanlar eklenir
+import re
+
+root = pathlib.Path(__file__).resolve().parent.parent
+modules_src = (root / "scripts" / "patch_omni.py").read_text(encoding="utf-8")
+block = modules_src[modules_src.index("MODULES = ["):]
+block = block[: block.index("\n]\n")]
+manifest = browser / "components/components.manifest"
+manifest_text = manifest.read_text(encoding="utf-8")
+added = []
+for name, category, entry in re.findall(r'\("([^"]+\.sys\.mjs)", "([^"]+)", "([^"]+)"\)', block):
+    line = f"category {category} resource:///modules/{name} {entry}"
+    if f"resource:///modules/{name} " not in manifest_text and f"category {category} " in manifest_text:
+        manifest_text = manifest_text.rstrip("\n") + "\n" + line + "\n"
+        added.append(name)
+manifest.write_text(manifest_text, encoding="utf-8")
+print("  modül kayıtları:", ", ".join(added) if added else "hepsi zaten var")

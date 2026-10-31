@@ -330,39 +330,64 @@ function init() {
 }
 
 function showLock(lock) {
+  const kind = lock.mode() == "system" ? lock.systemKind() : "custom";
+  const osPrompt = kind == "os"; // işletim sisteminin kendi penceresi; şifre kutusu yok
+  const sub = lock.mode() == "system" ? (osPrompt ? "marmara-panel-lock-sub-os" : "marmara-panel-lock-sub-system") : "marmara-panel-lock-sub";
+  const placeholder = lock.mode() == "system" ? "marmara-panel-lock-input-system" : "marmara-panel-lock-input";
   const close = iconButton({ icon: "close", l10n: "marmara-panel-close", onClick: closePanel });
   const header = h("header", { class: "mm-header" }, h("span"), h("h1", { l10n: "marmara-panel-passwords-title" }), close);
-  const input = h("input", {
-    type: "password",
-    autocomplete: "off",
-    spellcheck: "false",
-    l10n: "marmara-panel-lock-input",
-    "data-l10n-attrs": "placeholder, aria-label",
-  });
+  const input = osPrompt
+    ? null
+    : h("input", {
+        type: "password",
+        autocomplete: "off",
+        spellcheck: "false",
+        l10n: placeholder,
+        "data-l10n-attrs": "placeholder, aria-label",
+      });
   const error = h("p", { class: "mm-error", role: "alert", hidden: true, l10n: "marmara-panel-lock-wrong" });
   const unlock = h("button", { class: "mm-pill suggested", type: "submit", l10n: "marmara-panel-lock-unlock" });
   const form = h("form", { class: "mm-lock-form", novalidate: true }, input, error, unlock);
   const screen = h("main", { class: "mm-lock" },
     icon("login"),
     h("h2", { l10n: "marmara-panel-lock-title" }),
-    h("p", { l10n: "marmara-panel-lock-sub" }),
+    h("p", { l10n: sub }),
     form);
   document.body.append(header, screen);
   translate(document.body);
-  input.focus();
+  input?.focus();
+  const done = () => {
+    header.remove();
+    screen.remove();
+    init();
+  };
+  const tryOs = async () => {
+    unlock.disabled = true;
+    const reason = await format("marmara-panel-passwords-auth-reason");
+    const caption = await format("marmara-panel-passwords-auth-caption");
+    if (await lock.authenticateOs(reason, caption, topWindow())) {
+      done();
+      return;
+    }
+    error.hidden = false;
+    unlock.disabled = false;
+  };
   form.addEventListener("submit", async event => {
     event.preventDefault();
+    if (osPrompt) {
+      error.hidden = true;
+      tryOs();
+      return;
+    }
     unlock.disabled = true;
     let ok = false;
     try {
-      ok = await lock.verify(input.value);
+      ok = lock.mode() == "system" ? await lock.verifySystemPassword(input.value) : await lock.verify(input.value);
     } catch (e) {
       console.error("Marmara parolalar (şifre):", e);
     }
     if (ok) {
-      header.remove();
-      screen.remove();
-      init();
+      done();
       return;
     }
     // Art arda denemeyi yavaşlat
@@ -372,6 +397,9 @@ function showLock(lock) {
     input.focus();
     unlock.disabled = false;
   });
+  if (osPrompt) {
+    tryOs(); // pencere açılır açılmaz sistemin kendi penceresini göster
+  }
 }
 
 // Şifre açıksa (Ayarlar > Parolalar) önce kilit ekranı gösterilir
@@ -381,7 +409,7 @@ try {
 } catch (e) {
   console.error("Marmara parolalar (şifre modülü):", e);
 }
-if (lock?.isEnabled() && !globalThis.marmaraPanelBackend) {
+if (lock?.needsPrompt() && !globalThis.marmaraPanelBackend) {
   showLock(lock);
 } else {
   init();

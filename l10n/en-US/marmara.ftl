@@ -488,7 +488,7 @@ marmara-settings-lock-confirm-enable = Set password
 marmara-settings-lock-confirm-disable = Turn off password
 marmara-settings-lock-confirm-change = Change password
 marmara-settings-lock-cancel = Cancel
-marmara-settings-lock-err-wrong = The current password is wrong.
+marmara-settings-lock-err-wrong = The password is wrong.
 marmara-settings-lock-err-short = The password must be at least 4 characters.
 marmara-settings-lock-err-mismatch = The passwords don't match.
 marmara-settings-lock-err-ack = Confirm that the password can't be recovered to continue.
@@ -500,3 +500,14 @@ marmara-panel-lock-input =
     .aria-label = Password
 marmara-panel-lock-unlock = Unlock
 marmara-panel-lock-wrong = Wrong password.
+
+## Marmara: Lock with the computer password
+marmara-settings-lock-sub-system = The Passwords panel asks for your computer's password every time it opens. The password isn't stored in Marmara. It only locks the panel; it doesn't encrypt data on disk.
+marmara-settings-lock-title-enable-sys = Enter your computer password to turn it on
+marmara-settings-lock-title-disable-sys = Enter your computer password to turn it off
+marmara-settings-lock-syspw = Computer password
+marmara-panel-lock-sub-system = Enter your computer's password to access your passwords.
+marmara-panel-lock-sub-os = Verify your identity to access your passwords.
+marmara-panel-lock-input-system =
+    .placeholder = Computer password
+    .aria-label = Computer password

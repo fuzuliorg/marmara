@@ -488,7 +488,7 @@ marmara-settings-lock-confirm-enable = Şifreyi ayarla
 marmara-settings-lock-confirm-disable = Şifreyi kapat
 marmara-settings-lock-confirm-change = Şifreyi değiştir
 marmara-settings-lock-cancel = Vazgeç
-marmara-settings-lock-err-wrong = Mevcut şifre yanlış.
+marmara-settings-lock-err-wrong = Şifre yanlış.
 marmara-settings-lock-err-short = Şifre en az 4 karakter olmalı.
 marmara-settings-lock-err-mismatch = Şifreler aynı değil.
 marmara-settings-lock-err-ack = Devam etmek için şifrenin kurtarılamayacağını onaylayın.
@@ -500,3 +500,14 @@ marmara-panel-lock-input =
     .aria-label = Şifre
 marmara-panel-lock-unlock = Kilidi aç
 marmara-panel-lock-wrong = Şifre yanlış.
+
+## Marmara: Bilgisayar şifresiyle kilit
+marmara-settings-lock-sub-system = Parolalar paneli her açılışta bilgisayarınızın şifresini sorar. Şifre Marmara'da saklanmaz. Yalnızca paneli kilitler; verileri diskte şifrelemez.
+marmara-settings-lock-title-enable-sys = Etkinleştirmek için bilgisayar şifrenizi girin
+marmara-settings-lock-title-disable-sys = Kapatmak için bilgisayar şifrenizi girin
+marmara-settings-lock-syspw = Bilgisayar şifresi
+marmara-panel-lock-sub-system = Parolalarınıza erişmek için bilgisayarınızın şifresini girin.
+marmara-panel-lock-sub-os = Parolalarınıza erişmek için kimliğinizi doğrulayın.
+marmara-panel-lock-input-system =
+    .placeholder = Bilgisayar şifresi
+    .aria-label = Bilgisayar şifresi
