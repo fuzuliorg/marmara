@@ -433,3 +433,7 @@ marmara-panel-downloads-delete =
 marmara-panel-downloads-delete-heading = Delete this file?
 marmara-panel-downloads-delete-body = “{ $name }” will be deleted from your computer.
 marmara-panel-downloads-delete-confirm = Delete file
+
+# Açılışta “önceki oturum” bilgi çubuğu
+marmara-restore-session-hint-message = <strong>Open previous tabs?</strong> Turn on “Restore previous session” on the Startup page in Settings and Marmara will bring your tabs back every time it opens.
+marmara-restore-session-hint-button = Open settings

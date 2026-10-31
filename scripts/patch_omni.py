@@ -509,6 +509,26 @@ def patch_settings_pages(browser: pathlib.Path) -> None:
     log("ayarlar: Temel ayarlar sayfası, logolu motor seçici, dikey sekmeler kaldırıldı")
 
 
+def patch_restore_hint(gre: pathlib.Path) -> None:
+    """"Önceki sekmeler açılsın mı?" bilgi çubuğu: düğme uygulama menüsü yerine
+    doğrudan Ayarlar > Başlangıç sayfasını açar; metin de buna göre değişir."""
+    f = gre / "moz-src/browser/components/sessionstore/SessionWindowUI.sys.mjs"
+    text = need(f).read_text(encoding="utf-8")
+    if "// marmara" in text:
+        return
+    replace_once(f,
+                 '          win.PanelUI.selectAndMarkItem([\n'
+                 '            "appMenu-history-button",\n'
+                 '            "appMenu-restoreSession",\n'
+                 '          ]);\n',
+                 '          win.openPreferences("paneStartup"); // marmara\n')
+    replace_once(f, '"restore-session-startup-suggestion-message"',
+                 '"marmara-restore-session-hint-message"')
+    replace_once(f, '"l10n-id": "restore-session-startup-suggestion-button"',
+                 '"l10n-id": "marmara-restore-session-hint-button"')
+    log("oturum ipucu: düğme Ayarlar > Başlangıç sayfasını açar")
+
+
 def patch_default_toolbar(gre: pathlib.Path) -> None:
     """Yeni profillerin varsayılan araç çubuğu düzeni: yeni sekme düğmesi
     başlık çubuğunda, sekme çubuğunda yalnızca sekmeler (boş alan yok)."""
@@ -1189,6 +1209,7 @@ def main() -> int:
         ("simgeler", lambda: patch_adwaita_icons(args.browser, args.gre)),
         ("diller", lambda: prune_locales(args.browser, args.gre)),
         ("araç çubuğu", lambda: patch_default_toolbar(args.gre)),
+        ("oturum ipucu", lambda: patch_restore_hint(args.gre)),
         ("arama", lambda: patch_default_search(args.browser)),
         ("ayar sayfaları", lambda: patch_settings_pages(args.browser)),
         ("gizlilik sayfası", lambda: patch_privacy_page(args.browser)),
