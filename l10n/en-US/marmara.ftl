@@ -455,3 +455,13 @@ marmara-settings-min-text-size-sub = Small text set by websites won't shrink bel
 marmara-settings-min-text-size-off = Off
 marmara-welcome-accessibility-title = Accessibility
 marmara-welcome-accessibility-sub = Choose how compact the interface is. You can change zoom and text size later in Settings > Accessibility.
+
+## Marmara: Accent color
+marmara-settings-accent = Accent color
+marmara-settings-accent-sub = Used for buttons, selections and window surfaces. "System" follows the accent color in GNOME.
+marmara-settings-accent-system =
+    .aria-label = System
+    .title = System
+marmara-settings-accent-custom =
+    .aria-label = Pick your own color
+    .title = Pick your own color

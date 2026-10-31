@@ -455,3 +455,13 @@ marmara-settings-min-text-size-sub = Sitelerin ayarladığı küçük yazılar b
 marmara-settings-min-text-size-off = Kapalı
 marmara-welcome-accessibility-title = Erişilebilirlik
 marmara-welcome-accessibility-sub = Arayüzün ne kadar sıkı olacağını seçin. Yakınlaştırma ve yazı boyutunu daha sonra Ayarlar > Erişilebilirlik bölümünden değiştirebilirsiniz.
+
+## Marmara: Vurgu rengi
+marmara-settings-accent = Vurgu rengi
+marmara-settings-accent-sub = Düğmelerde, seçimlerde ve pencere yüzeylerinde kullanılır. "Sistem" GNOME'daki vurgu rengini izler.
+marmara-settings-accent-system =
+    .aria-label = Sistem
+    .title = Sistem
+marmara-settings-accent-custom =
+    .aria-label = Kendi rengini seç
+    .title = Kendi rengini seç

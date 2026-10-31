@@ -144,6 +144,8 @@ const minTextSizeBinding = {
   },
 };
 
+const Accent = ChromeUtils.importESModule("resource:///modules/MarmaraAccent.sys.mjs");
+
 const { normalizeUrl } = ChromeUtils.importESModule("resource:///modules/MarmaraStartpage.sys.mjs");
 
 // Açılış sayfası: "start" (Marmara başlangıç sayfası), "blank" ya da "custom" (kendi adresi)
@@ -615,6 +617,7 @@ const PAGES = [
               ["dark", "marmara-settings-theme-dark"],
             ],
           },
+          { type: "palette", k: "accent", sub: true },
         ],
       },
       {
@@ -1059,6 +1062,80 @@ class SettingsDialog {
     return row;
   }
 
+  /** Vurgu rengi: hazır renkler + "sistem" + kendi rengi (renk seçici) */
+  #paletteRow(spec) {
+    const grid = create(this.doc, "div", { className: "marmara-palette", attrs: { role: "radiogroup" } });
+    const swatch = (value, label) => {
+      const button = create(
+        this.doc,
+        "button",
+        {
+          className: "marmara-swatch",
+          attrs: { type: "button", role: "radio", "data-value": value, "aria-label": label, title: label },
+        },
+        create(this.doc, "span", { className: "marmara-swatch-top" }),
+        create(this.doc, "span", { className: "marmara-swatch-light" }),
+        create(this.doc, "span", { className: "marmara-swatch-mute" }),
+        create(this.doc, "img", { className: "marmara-swatch-check", attrs: { src: ICON("check"), alt: "" } })
+      );
+      if (value) {
+        button.style.setProperty("--swatch", value);
+      } else {
+        button.classList.add("system");
+      }
+      return button;
+    };
+    const sync = () => {
+      const current = Accent.getAccent();
+      const preset = Accent.PRESETS.includes(current);
+      for (const button of grid.querySelectorAll(".marmara-swatch")) {
+        const value = button.dataset.value;
+        button.setAttribute("aria-checked", String(value == current || (button.classList.contains("custom") && !!current && !preset)));
+      }
+      custom.style.setProperty("--swatch", current && !preset ? current : "transparent");
+    };
+    const pick = value => {
+      Accent.setAccent(value);
+      sync();
+    };
+
+    const system = swatch("", "Sistem");
+    system.setAttribute("data-l10n-id", id("accent-system"));
+    system.addEventListener("click", () => pick(""));
+    grid.append(system);
+    for (const hex of Accent.PRESETS) {
+      const button = swatch(hex, hex);
+      button.addEventListener("click", () => pick(hex));
+      grid.append(button);
+    }
+
+    // Kendi rengi: GTK renk seçicisini açar
+    const input = create(this.doc, "input", { className: "marmara-palette-input", attrs: { type: "color", tabindex: "-1", "aria-hidden": "true" } });
+    input.value = Accent.getAccent() || "#3584e4";
+    const custom = create(
+      this.doc,
+      "button",
+      { className: "marmara-swatch custom", attrs: { type: "button", role: "radio", "data-value": "" } },
+      create(this.doc, "img", { className: "marmara-swatch-pick", attrs: { src: ICON("edit-outline"), alt: "" } }),
+      create(this.doc, "img", { className: "marmara-swatch-check", attrs: { src: ICON("check"), alt: "" } }),
+      input
+    );
+    custom.setAttribute("data-l10n-id", id("accent-custom"));
+    custom.addEventListener("click", event => {
+      if (event.target != input) {
+        input.click();
+      }
+    });
+    input.addEventListener("input", () => pick(input.value));
+    grid.append(custom);
+    sync();
+
+    const row = this.#row(spec);
+    row.classList.add("marmara-palette-row");
+    row.append(grid);
+    return row;
+  }
+
   #segmentsRow(spec) {
     const strip = create(this.doc, "div", { className: "marmara-settings-segments", attrs: { role: "radiogroup" } });
     const sync = () => {
@@ -1454,6 +1531,8 @@ class SettingsDialog {
         return this.#choiceRows(spec);
       case "segments":
         return [this.#segmentsRow(spec)];
+      case "palette":
+        return [this.#paletteRow(spec)];
       case "text":
         return [this.#textRow(spec)];
       case "engine":
