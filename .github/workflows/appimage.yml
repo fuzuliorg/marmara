@@ -1,0 +1,64 @@
+# AppImage'ı bir release'ten derleyip aynı release'e ekler (ayrıntı: packaging/appimage/).
+#
+#  - "LibreWolf güncellemesi" yeni sürüm yayımlayınca otomatik çağrılır.
+#  - Elle de çalıştırılabilir (Actions > AppImage > Run workflow): sürüm etiketi boş
+#    bırakılırsa en son release kullanılır. Yeni sürüm numarası üretmeden, mevcut
+#    release'e AppImage eklemek için kullanışlıdır.
+#
+# Bu dosya GitHub'da .github/workflows/ altında durmalı.
+
+name: AppImage
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Release etiketi (örn. v1.0.24); boşsa en son release"
+        type: string
+        default: ""
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release etiketi (örn. v1.0.24); boşsa en son release"
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release etiketini belirle
+        id: tag
+        run: |
+          tag="${{ inputs.tag }}"
+          [ -n "$tag" ] || tag="$(gh release view --json tagName --jq .tagName)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Gerekli araçlar
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends zsync xz-utils
+
+      - name: Linux arşivini indir
+        run: gh release download "${{ steps.tag.outputs.tag }}" --pattern 'marmara-*-linux-x86_64.tar.xz' --dir dist --repo "$GITHUB_REPOSITORY"
+
+      - name: AppImage derle
+        env:
+          MARMARA_VERSION: ${{ steps.tag.outputs.version }}
+        run: packaging/appimage/build-appimage.sh dist/marmara-*-linux-x86_64.tar.xz
+
+      - name: Release'e ekle
+        run: |
+          v="${{ steps.tag.outputs.version }}"
+          ls -l dist
+          gh release upload "${{ steps.tag.outputs.tag }}" \
+            "dist/Marmara-$v-x86_64.AppImage" \
+            "dist/Marmara-$v-x86_64.AppImage.zsync" \
+            --repo "$GITHUB_REPOSITORY" --clobber
