@@ -219,7 +219,6 @@ class WelcomeDialog {
     const last = this.index == this.steps.length - 1;
     this.back.hidden = this.index == 0;
     const onTerms = this.steps[this.index].key == "terms";
-    this.skip.hidden = last || onTerms;
     const needsRestart = this.shared.localeBinding.get() != this.initialLocale;
     this.next.setAttribute("data-l10n-id", id(last ? (needsRestart ? "restart" : "finish") : "next"));
     this.next.disabled = (last && this.engineChoice === null) || (onTerms && !this.termsAccepted);
@@ -261,14 +260,13 @@ class WelcomeDialog {
 
     this.dots = this.steps.map(() => create(doc, "span", { className: "marmara-welcome-dot" }));
     this.back = create(doc, "button", { className: "marmara-settings-pill", l10n: id("back"), attrs: { type: "button" } });
-    this.skip = create(doc, "button", { className: "marmara-settings-pill", l10n: id("skip"), attrs: { type: "button" } });
     this.next = create(doc, "button", { className: "marmara-settings-pill suggested", attrs: { type: "button" } });
     const dots = create(doc, "div", { className: "marmara-welcome-dots", attrs: { "aria-hidden": "true" } }, ...this.dots);
     this.footer = create(
       doc,
       "footer",
       { className: "marmara-welcome-footer" },
-      create(doc, "div", { className: "marmara-welcome-side" }, this.back, this.skip),
+      create(doc, "div", { className: "marmara-welcome-side" }, this.back),
       dots,
       create(doc, "div", { className: "marmara-welcome-side end" }, this.next)
     );
@@ -277,7 +275,6 @@ class WelcomeDialog {
       this.index--;
       this.#showStep();
     });
-    this.skip.addEventListener("click", () => this.dialog.close());
     this.next.addEventListener("click", () => {
       if (this.index < this.steps.length - 1) {
         this.index++;
@@ -299,12 +296,8 @@ class WelcomeDialog {
       this.footer
     );
     this.title.id = "marmara-welcome-heading";
-    // Koşullar kabul edilmeden Esc ile de kapatılamaz
-    this.dialog.addEventListener("cancel", event => {
-      if (!this.termsAccepted) {
-        event.preventDefault();
-      }
-    });
+    // Atlama yok: Esc ile de kapatılamaz; karşılama sonuna kadar tamamlanır
+    this.dialog.addEventListener("cancel", event => event.preventDefault());
     // Hangi yolla kapanırsa kapansın bir daha gösterilmez
     this.dialog.addEventListener("close", () => {
       Services.prefs.setBoolPref(PREF_DONE, true);
