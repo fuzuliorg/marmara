@@ -46,10 +46,10 @@ class WelcomeDialog {
   constructor(win) {
     this.win = win;
     this.doc = win.document;
-    const { themeBinding, localeBinding, LANGUAGES, restartBrowser } = ChromeUtils.importESModule(
+    const { themeBinding, densityBinding, localeBinding, LANGUAGES, restartBrowser } = ChromeUtils.importESModule(
       "resource:///modules/MarmaraSettings.sys.mjs"
     ).MarmaraSettingsShared;
-    this.shared = { themeBinding, localeBinding, LANGUAGES, restartBrowser };
+    this.shared = { themeBinding, densityBinding, localeBinding, LANGUAGES, restartBrowser };
     this.initialLocale = localeBinding.get();
     this.engines = [];
     this.engineChoice = null; // kullanıcı seçene kadar boş
@@ -59,6 +59,7 @@ class WelcomeDialog {
       { key: "language", build: () => this.#languageList() },
       { key: "terms", build: () => this.#termsList() },
       { key: "theme", build: () => this.#themeList() },
+      { key: "accessibility", build: () => this.#densityList() },
       { key: "tosdr", build: () => this.#tosdrList() },
       { key: "passwords", build: () => this.#passwordsList() },
       { key: "search", build: () => this.#searchList() },
@@ -142,6 +143,23 @@ class WelcomeDialog {
       ...options.map(([value, l10n]) =>
         // Tema seçilince hemen uygulanır; kutu da yeni renklere geçer
         this.#choiceRow({ l10n, selected: value == current, onPick: () => themeBinding.set(value) })
+      )
+    );
+  }
+
+  /** Erişilebilirlik: görünüm yoğunluğu. Yeni kurulumda "İnce" önerilir; adım gösterilince uygulanır. */
+  #densityList() {
+    const { densityBinding } = this.shared;
+    if (!Services.prefs.prefHasUserValue("browser.uidensity")) {
+      densityBinding.set("slim");
+    }
+    const current = densityBinding.get();
+    return this.#card(
+      ...[
+        ["classic", "marmara-settings-density-classic"],
+        ["slim", "marmara-settings-density-slim"],
+      ].map(([value, l10n]) =>
+        this.#choiceRow({ l10n, selected: value == current, onPick: () => densityBinding.set(value) })
       )
     );
   }

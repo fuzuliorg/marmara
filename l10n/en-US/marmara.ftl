@@ -437,3 +437,21 @@ marmara-panel-downloads-delete-confirm = Delete file
 # Açılışta “önceki oturum” bilgi çubuğu
 marmara-restore-session-hint-message = <strong>Open previous tabs?</strong> Turn on “Restore previous session” on the Startup page in Settings and Marmara will bring your tabs back every time it opens.
 marmara-restore-session-hint-button = Open settings
+
+## Marmara: Accessibility (settings and welcome)
+marmara-settings-page-accessibility = Accessibility
+marmara-settings-group-density = Interface density
+marmara-settings-density = Interface spacing
+marmara-settings-density-sub = Classic uses roomy spacing. Slim trims the space around the toolbar and tabs to leave more room for content.
+marmara-settings-density-classic = Classic
+marmara-settings-density-slim = Slim
+marmara-settings-group-zoom = Zoom and text
+marmara-settings-default-zoom = Default zoom
+marmara-settings-default-zoom-sub = Starting size for all sites; a zoom you set with Ctrl on a site is remembered for that site.
+marmara-settings-text-size = Text size
+marmara-settings-text-size-sub = For page text that doesn't set its own size.
+marmara-settings-min-text-size = Minimum text size
+marmara-settings-min-text-size-sub = Small text set by websites won't shrink below this size.
+marmara-settings-min-text-size-off = Off
+marmara-welcome-accessibility-title = Accessibility
+marmara-welcome-accessibility-sub = Choose how compact the interface is. You can change zoom and text size later in Settings > Accessibility.

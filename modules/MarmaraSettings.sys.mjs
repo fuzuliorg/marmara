@@ -95,6 +95,55 @@ const themeBinding = {
   },
 };
 
+// Görünüm yoğunluğu: Klasik (0) ya da İnce (1, Firefox'un "compact" yoğunluğu)
+const densityBinding = {
+  get: () => (prefs.getIntPref("browser.uidensity", 0) == 1 ? "slim" : "classic"),
+  set: value => prefs.setIntPref("browser.uidensity", value == "slim" ? 1 : 0),
+};
+
+// Varsayılan sayfa yakınlaştırması: Firefox'un genel "browser.content.full-zoom" içerik tercihi
+const ZOOM_PROP = "browser.content.full-zoom";
+const ZOOM_CHOICES = [50, 67, 80, 90, 100, 110, 120, 133, 150, 170, 200, 240, 300];
+const nearest = (list, value) => list.reduce((a, b) => (Math.abs(b - value) < Math.abs(a - value) ? b : a));
+const zoomBinding = {
+  get() {
+    try {
+      const service = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService2);
+      const cached = service.getCachedGlobal(ZOOM_PROP, Cu.createLoadContext());
+      return String(nearest(ZOOM_CHOICES, Math.round((parseFloat(cached?.value) || 1) * 100)));
+    } catch (e) {
+      return "100";
+    }
+  },
+  set(value) {
+    const service = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService2);
+    // Özel pencerede de aynı değer geçerli olsun diye özel olmayan bağlam kullanılır
+    service.setGlobal(ZOOM_PROP, parseInt(value, 10) / 100, Cu.createLoadContext(), null);
+  },
+};
+
+// Sayfa yazı boyutu (sitenin kendi boyutunu belirtmediği metinler) ve en küçük yazı boyutu
+const TEXT_SIZES = [14, 16, 18, 20, 24, 28];
+const textSizeBinding = {
+  get: () => String(nearest(TEXT_SIZES, prefs.getIntPref("font.size.variable.x-western", 16))),
+  set(value) {
+    const size = parseInt(value, 10);
+    for (const group of ["x-western", "x-unicode"]) {
+      prefs.setIntPref(`font.size.variable.${group}`, size);
+      prefs.setIntPref(`font.size.monospace.${group}`, Math.round((size * 13) / 16));
+    }
+  },
+};
+const MIN_TEXT_SIZES = [0, 12, 14, 16, 18, 20];
+const minTextSizeBinding = {
+  get: () => String(nearest(MIN_TEXT_SIZES, prefs.getIntPref("font.minimum-size.x-western", 0))),
+  set(value) {
+    for (const group of ["x-western", "x-unicode"]) {
+      prefs.setIntPref(`font.minimum-size.${group}`, parseInt(value, 10));
+    }
+  },
+};
+
 const { normalizeUrl } = ChromeUtils.importESModule("resource:///modules/MarmaraStartpage.sys.mjs");
 
 // Açılış sayfası: "start" (Marmara başlangıç sayfası), "blank" ya da "custom" (kendi adresi)
@@ -600,6 +649,53 @@ const PAGES = [
     ],
   },
   {
+    id: "accessibility",
+    icon: "eye",
+    groups: [
+      {
+        k: "density",
+        rows: [
+          {
+            type: "segments",
+            k: "density",
+            sub: true,
+            bind: densityBinding,
+            options: [
+              ["classic", "marmara-settings-density-classic"],
+              ["slim", "marmara-settings-density-slim"],
+            ],
+          },
+        ],
+      },
+      {
+        k: "zoom",
+        rows: [
+          {
+            type: "choice",
+            k: "default-zoom",
+            sub: true,
+            bind: zoomBinding,
+            options: ZOOM_CHOICES.map(value => [String(value), `${value}%`]),
+          },
+          {
+            type: "choice",
+            k: "text-size",
+            sub: true,
+            bind: textSizeBinding,
+            options: TEXT_SIZES.map(value => [String(value), `${value} px`]),
+          },
+          {
+            type: "choice",
+            k: "min-text-size",
+            sub: true,
+            bind: minTextSizeBinding,
+            options: MIN_TEXT_SIZES.map(value => [String(value), value ? `${value} px` : "marmara-settings-min-text-size-off"]),
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "startup",
     icon: "startup",
     groups: [
@@ -791,6 +887,7 @@ const PAGES = [
 // Firefox'un eski bölüm adlarını yeni sayfalara eşler (openPreferences("paneX"))
 const PANE_ALIASES = [
   [/privacy|security|etp|doh/i, "privacy"],
+  [/accessibility|zoom|fonts?/i, "accessibility"],
   [/home|startup|tabs/i, "startup"],
   [/passwords|autofill|logins/i, "passwords"],
   [/download|applications/i, "downloads"],
@@ -1629,4 +1726,4 @@ export const MarmaraSettings = {
 };
 
 /** Karşılama ekranı (MarmaraWelcome) ile ortak kullanılan parçalar */
-export const MarmaraSettingsShared = { themeBinding, localeBinding, LANGUAGES, restartBrowser };
+export const MarmaraSettingsShared = { themeBinding, densityBinding, localeBinding, LANGUAGES, restartBrowser };

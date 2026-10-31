@@ -437,3 +437,21 @@ marmara-panel-downloads-delete-confirm = Dosyayı sil
 # Açılışta “önceki oturum” bilgi çubuğu
 marmara-restore-session-hint-message = <strong>Önceki sekmeler açılsın mı?</strong> Ayarlar’daki “Başlangıç” sayfasında “Önceki oturumu geri yükle”yi açarsanız, Marmara her açılışta sekmelerinizi geri getirir.
 marmara-restore-session-hint-button = Ayarları aç
+
+## Marmara: Erişilebilirlik (ayarlar ve karşılama)
+marmara-settings-page-accessibility = Erişilebilirlik
+marmara-settings-group-density = Görünüm yoğunluğu
+marmara-settings-density = Arayüz boşlukları
+marmara-settings-density-sub = Klasik, geniş ve rahat boşluklar kullanır. İnce, araç çubuğu ile sekmelerdeki boşlukları azaltıp içeriğe daha çok yer bırakır.
+marmara-settings-density-classic = Klasik
+marmara-settings-density-slim = İnce
+marmara-settings-group-zoom = Yakınlaştırma ve yazı
+marmara-settings-default-zoom = Varsayılan yakınlaştırma
+marmara-settings-default-zoom-sub = Tüm sitelerde başlangıç büyüklüğü; bir sitede Ctrl ile değiştirdiğiniz oran o site için saklanır.
+marmara-settings-text-size = Yazı boyutu
+marmara-settings-text-size-sub = Boyutunu kendisi belirtmeyen sayfa metinleri için.
+marmara-settings-min-text-size = En küçük yazı boyutu
+marmara-settings-min-text-size-sub = Sitelerin ayarladığı küçük yazılar bu boyuttan küçülmez.
+marmara-settings-min-text-size-off = Kapalı
+marmara-welcome-accessibility-title = Erişilebilirlik
+marmara-welcome-accessibility-sub = Arayüzün ne kadar sıkı olacağını seçin. Yakınlaştırma ve yazı boyutunu daha sonra Ayarlar > Erişilebilirlik bölümünden değiştirebilirsiniz.

@@ -1,0 +1,30 @@
+/* "İnce" görünüm: Ayarlar > Erişilebilirlik > Görünüm yoğunluğu.
+ *
+ * browser.uidensity = 1 (Firefox'un "compact" yoğunluğu) olduğunda Firefox
+ * kök öğeye uidensity="compact" ekler; Marmara bunu "İnce" olarak kullanır.
+ * Klasik görünüm (uidensity=0) shape.css'teki ölçüleri korur.
+ *
+ * Amaç: araç çubuğu ile sekmeler arasındaki ve sekmelerin altındaki
+ * boşlukları azaltıp içeriğe daha çok yer bırakmak.
+ */
+
+:root[uidensity="compact"] {
+  --toolbarbutton-padding-inner: 6px;        /* 16px simge + 2×6 = 28px */
+  --toolbarbutton-padding-outer: 2px;
+  --urlbar-height: 28px;
+  --urlbar-padding-block: 2px;
+  --urlbar-margin-inline: 2px;
+  --tab-min-height: 28px;
+  --tab-margin-block: 2px;
+  --tab-padding-inline: 8px;
+}
+
+:root[uidensity="compact"] #nav-bar {
+  padding-block: 2px;
+  padding-inline: 2px;
+}
+
+:root[uidensity="compact"] #TabsToolbar {
+  padding-block: 0;
+  padding-inline: 2px;
+}
