@@ -52,7 +52,7 @@ jobs:
       - name: AppImage derle
         env:
           MARMARA_VERSION: ${{ steps.tag.outputs.version }}
-        run: packaging/appimage/build-appimage.sh dist/marmara-*-linux-x86_64.tar.xz
+        run: bash packaging/appimage/build-appimage.sh dist/marmara-*-linux-x86_64.tar.xz
 
       - name: Release'e ekle
         run: |
