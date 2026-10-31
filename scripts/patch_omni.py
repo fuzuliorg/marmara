@@ -1058,6 +1058,7 @@ MODULES = [
     ("MarmaraAppMenu.sys.mjs", "browser-window-delayed-startup", "MarmaraAppMenu.initWindow"),
     ("MarmaraWelcome.sys.mjs", "browser-window-delayed-startup", "MarmaraWelcome.initWindow"),
     ("MarmaraExtensions.sys.mjs", "browser-window-delayed-startup", "MarmaraExtensions.initWindow"),
+    ("MarmaraDownloads.sys.mjs", "browser-window-delayed-startup", "MarmaraDownloads.initWindow"),
     ("MarmaraStartpage.sys.mjs", "browser-before-ui-startup", "MarmaraStartpage.init"),
 ]
 # Kategoriye bağlanmayan, kullanılırken içe aktarılan modüller
