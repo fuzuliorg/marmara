@@ -433,3 +433,7 @@ marmara-panel-downloads-delete =
 marmara-panel-downloads-delete-heading = Dosya silinsin mi?
 marmara-panel-downloads-delete-body = “{ $name }” bilgisayarınızdan silinecek.
 marmara-panel-downloads-delete-confirm = Dosyayı sil
+
+# Açılışta “önceki oturum” bilgi çubuğu
+marmara-restore-session-hint-message = <strong>Önceki sekmeler açılsın mı?</strong> Ayarlar’daki “Başlangıç” sayfasında “Önceki oturumu geri yükle”yi açarsanız, Marmara her açılışta sekmelerinizi geri getirir.
+marmara-restore-session-hint-button = Ayarları aç
